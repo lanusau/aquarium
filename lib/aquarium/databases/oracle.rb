@@ -55,14 +55,13 @@ where change_id = #{change.id}
 END
     end
 
-    def control_table_missing?
+    def control_table_missing_sql
       sql = <<-END
        select count(*) from all_tables
        where owner = USER
        and table_name = 'AQU_CHANGE'
       END
-      row = @dbh.select_one(sql)
-      return row[0].to_i == 0
+      return sql
     end
 
   end

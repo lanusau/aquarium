@@ -42,7 +42,7 @@ module Aquarium
       # Cache all changes on first call
       if @changes_in_database.nil?
         @changes_in_database = []
-        @dbh.select_all('select code,file_name,description,change_id from aqu_change') do | row |
+        @dbh.select_all('select code,file_name,description,change_id from aqu_change order by change_id asc') do | row |
             @changes_in_database << Aquarium::Change.new(row[0],row[1],row[2],row[3])
         end
       end
@@ -51,7 +51,14 @@ module Aquarium
 
     def change_registered?(change)               
       changes_in_database.detect{|c| c.code == change.code && c.file_name == change.file_name}
-    end    
+    end
+
+    def control_table_missing?
+      return @control_table_missing unless @control_table_missing.nil?
+      row = @dbh.select_one(control_table_missing_sql)
+      @control_table_missing = (row[0].to_i == 0)
+      return @control_table_missing
+    end
 
   end
 end

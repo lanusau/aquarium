@@ -39,5 +39,21 @@ module Aquarium
       @change_collection.detect{|c| (c.code == change.code) && (c.file_name == change.file_name)}
     end
 
+    # Return list of changes that have not been applied yet
+    def pending_changes(database)      
+      return @pending_change_collection unless @pending_change_collection.nil?
+
+      @pending_change_collection = []
+      if database.control_table_missing?
+        # With no control table we assume nothing was implemented yet
+        @pending_change_collection =  @change_collection.dup
+      else
+        @change_collection.each do |change|          
+          @pending_change_collection << change if !database.change_registered?(change)
+        end
+      end
+      return @pending_change_collection
+    end
+
   end
 end
