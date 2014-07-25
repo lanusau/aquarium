@@ -7,6 +7,7 @@ module Aquarium
 
     @@registered_databases= []
 
+    # Find database that can handle particular URL
     def self.database_for(options)
       url = options[:url]      
 
@@ -34,11 +35,15 @@ module Aquarium
     end
 
     def unregister_change(change)
-      @dbh.do(unregister_change_sql(change))
-      @dbh.commit
+      if database_change = change_registered?(change)
+        @dbh.do(unregister_change_sql(database_change))
+        @dbh.commit
+      end
     end
 
     def changes_in_database
+      return [] if control_table_missing?
+      
       # Cache all changes on first call
       if @changes_in_database.nil?
         @changes_in_database = []
@@ -58,6 +63,13 @@ module Aquarium
       row = @dbh.select_one(control_table_missing_sql)
       @control_table_missing = (row[0].to_i == 0)
       return @control_table_missing
+    end
+
+    def create_control_table(logger)
+      logger << "---- Creating control table" unless logger.nil?
+      control_table_sqls.each do |sql|
+        execute(sql)
+      end
     end
 
   end

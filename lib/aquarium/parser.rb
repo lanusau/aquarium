@@ -11,7 +11,7 @@ module Aquarium
       File.open(file, "r") do |f|       
 
         while line = f.gets
-          if tag = Aquarium::Tag.match(line,File.basename(file),change_collection)
+          if tag = Aquarium::Tag.match(line,file,change_collection)
             tag.parse(f)
           else
             if !change_collection.current_change.nil?

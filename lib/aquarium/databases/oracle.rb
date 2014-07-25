@@ -11,7 +11,7 @@ module Aquarium
     end
 
     def initialize(options)
-      @dbh = DBI.connect(options[:url], options[:user], options[:password])
+      @dbh = DBI.connect(options[:url], options[:username], options[:password])
     end
 
     def control_table_sqls
@@ -24,7 +24,12 @@ create table aqu_change (
   file_name varchar2(200) not null,
   description varchar2(1000) ,
   execution_date date not null,
-  tag varchar2(100) null
+  tag varchar2(100) null,
+  cmr_number varchar2(10) null,
+  create_sysdate date not null,
+  update_sysdate date not null,
+  user_update varchar2(100) null,
+  comments varchar2(1000) null
   )
 END
       sql_list << <<-END
@@ -42,9 +47,10 @@ END
     def register_change_sql(change)
       return <<-END
 insert into aqu_change
-  (change_id,code,file_name,description,execution_date)
+  (change_id,code,file_name,description,execution_date,cmr_number,create_sysdate,update_sysdate,user_update)
 values
-(aqu_primary_key_s.nextval,'#{change.code}','#{change.file_name}','#{change.description}',sysdate)
+(aqu_primary_key_s.nextval,'#{change.code}','#{change.file_name}','#{change.description}',sysdate,
+ #{change.cmr_number},sysdate,sysdate,#{change.user_update})
 END
     end
 

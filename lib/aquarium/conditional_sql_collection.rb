@@ -9,7 +9,21 @@ module Aquarium
       super()
     end
 
+    def conditional_sql
+      sql_array = []
+      sql_array << <<-EOF "-- Executed if condition below equals #{@expected_result}"
+      #{@condition}
+      sql_array << "-- SQL"
+      EOF
+      sql_array.concat(@sql_collection)
+      sql_array << "-- End of conditional SQL"
+
+    end
+
     def to_a(database)
+
+      return conditional_sql if database.nil?
+
       dbh = database.dbh
       begin
       row = dbh.select_one(@condition)

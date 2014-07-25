@@ -27,7 +27,7 @@ module Aquarium
         blob << line
       end
 
-      @sql_collection  = @sql_collection + blob.split(DELIMITER).delete_if{|e| e =~ /^[\n\s]+$/}
+      @sql_collection  = @sql_collection + blob.split(DELIMITER).delete_if{|e| e =~ /\A\s+\Z/}
     end
 
     def << (object)
@@ -44,6 +44,10 @@ module Aquarium
         end
       end
       return sql_array
+    end
+
+    def to_string(database)
+      to_a(database).join(";\n") << ";"
     end
     
   end

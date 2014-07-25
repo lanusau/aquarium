@@ -20,7 +20,7 @@ module Aquarium
           description = ''
         end
 
-        @change = Aquarium::Change.new(code,file_name,description)
+        @change = Aquarium::Change.new(code,File.basename(file_name),description)
         @change.current_sql_collection = :apply
 
         # {change} tag terminates current change

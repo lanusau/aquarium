@@ -7,8 +7,9 @@ module Aquarium
     class Include < Aquarium::Tag
       register_tag :include
 
-      def initialize(parameters,file_name,change_collection)
-        @include_file_name = parameters
+      def initialize(parameters,file,change_collection)
+        @include_file_name = File.dirname(file) +'/'+ parameters
+
         @change_collection = change_collection
       end
 

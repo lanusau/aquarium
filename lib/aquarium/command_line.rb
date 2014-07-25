@@ -1,74 +1,81 @@
 require 'optparse'
+require 'yaml'
+require 'active_record'
 require 'aquarium/database'
 require 'aquarium/parser'
-require 'aquarium/executors/update'
-require 'aquarium/executors/print_update'
-require 'aquarium/executors/rollback'
-require 'aquarium/executors/print_rollback'
+require 'aquarium/executor'
+require 'aquarium/models/aqu_database'
+require 'aquarium/models/aqu_instance'
 
 module Aquarium
 
   class CommandLine
     attr :options
 
-    COMMANDS = [:update,:print_update,:rollback,:print_rollback]
-    
     def initialize(args)
-      handle_options(args)
+      process_options(args)
+      query_repository
     end
 
-    def process
-      change_collection= Aquarium::Parser.parse(@file)
-      database = Aquarium::Database.database_for(options)
-      case @command
-      when :update        
-        Aquarium::Executors::Update.new(database,change_collection).execute
-      when :print_update
-        Aquarium::Executors::PrintUpdate.new(database,change_collection).execute
-      when :rollback
-        Aquarium::Executors::Rollback.new(database,change_collection,@parameters).execute
-      when :print_rollback
-        Aquarium::Executors::PrintRollback.new(database,change_collection,@parameters).execute
+    # Load configuration
+    def query_repository
+      ActiveRecord::Base.establish_connection(YAML::load(File.open('database.yml')))
+      instance = AquInstance.find_by_name(@options[:instance_name])
+      @options[:url] = instance.url
+      @options[:username] = instance.username
+      @options[:password] = instance.password
+    end
+
+    def run
+      change_collection= Aquarium::Parser.parse(@options[:file])
+      database = Aquarium::Database.database_for(@options)
+      if @options[:execute]
+        Aquarium::Executor.executor_for(@command).new(database,change_collection,@parameters).execute
+      else
+        Aquarium::Executor.executor_for(@command).new(database,change_collection,@parameters).print
       end
     rescue Exception => e      
       puts e.to_s
       e.backtrace.each{|line| puts line}
     end
 
-    def handle_options(args)
+    def process_options(args)
       @options = {}
+      @options[:config] = 'repo.yml'
+      @options[:execute] = false
       optparse = OptionParser.new do |opts|
-        opts.banner = "Usage: aq FILE COMMAND [PARAMETERS] [OPTIONS]"
+        opts.banner = "Usage: aq [OPTIONS] COMMAND"
         opts.separator ""
-        opts.separator "Options:"
-        opts.on("-d", "--database URL", "Database connection URL") do |url|
-          @options[:url] = url
+        opts.separator "Options:"        
+        opts.on("-f", "--file CHANGEFILE", "File with changes") do |config|
+          @options[:file] = config
         end
-        opts.on("-u", "--user USER", "Username") do |username|
-          @options[:user] = username
+        opts.on("-d", "--database DATABASE", "Name of database instance") do |config|
+          @options[:instance_name] = config
         end
-        opts.on("-p", "--password PASSWORD", "Password") do |password|
-          @options[:password] = password
+        opts.on("-c", "--confile [FILE]", "Alternate configuration file. Default is repo.yml in current directory") do |config|
+          @options[:config] = config
         end
-        opts.on_tail("-h", "--help", "Show this message") do
+        opts.on("-x", "--execute", "Execute SQL. Default is to just print SQL") do |config|
+          @options[:execute] = true
+        end
+        opts.on("-h", "--help", "Show this message") do
           puts opts
           exit
         end
+        opts.separator ""
+        opts.separator "Commands:"
+        Aquarium::Executor.registered_executors.each do |executor|
+            opts.separator executor.help
+        end
+        
       end
 
       optparse.parse!(args)
-
-      mandatory = [:url, :user,:password]
-      missing = mandatory.select{ |param| @options[param].nil? }      
-      raise OptionParser::InvalidOption.new("Missing options: #{missing.join(', ')}") unless missing.empty?
       
-      @file = args.shift
-      raise OptionParser::InvalidOption.new('Please specify file') if @file.nil?
-
       @command = args.shift
       raise OptionParser::InvalidOption.new('Please specify command') if @command.nil?
-      @command = @command.to_sym
-      raise OptionParser::InvalidOption.new("Unknown command [#{@command}]") unless COMMANDS.detect { |c| c == @command }
+      @command = @command.to_sym      
 
       @parameters = args
             
