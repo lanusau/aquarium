@@ -24,7 +24,7 @@ module Aquarium
 
         @change_collection.pending_changes(@database).each do |change|
 
-         change.print_banner(@logger)
+         change.print_banner('APPLY',@logger)
           
           change.apply_sql_collection.to_a(@database).each do |sql|
             @database.execute(sql)
@@ -45,7 +45,7 @@ module Aquarium
         end
 
         @change_collection.pending_changes(@database).each do |change|
-          change.print_banner(STDOUT)
+          change.print_banner('APPLY',STDOUT)
           change.apply_sql_collection.to_a(@database).each do |sql|
             puts sql
             puts ';'

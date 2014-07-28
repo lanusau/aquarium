@@ -39,9 +39,14 @@ module Aquarium
       @change_collection.detect{|c| (c.code == change.code) && (c.file_name == change.file_name)}
     end
 
-    # Find particular change by code
+    # Find particular change by code and file name
     def find(change_code, file_name)
       @change_collection.detect{|c| (c.code == change_code) && (c.file_name == file_name)}
+    end
+
+    # Find particular change by code
+    def find_by_code(change_code)
+      @change_collection.detect{|c| c.code == change_code}
     end
 
     # Return list of changes that have not been applied yet

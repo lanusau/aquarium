@@ -38,8 +38,7 @@ module Aquarium
         end
 
         changes_to_rollback.each do |change|
-          @logger <<  "Rollback" unless @logger.nil?
-          change.print_banner(@logger)
+          change.print_banner('ROLLBACK',@logger)
 
           change.rollback_sql_collection.to_a(@database).each do |sql|
             @database.execute(sql)
@@ -66,9 +65,8 @@ module Aquarium
           break if index > @count
         end
 
-        changes_to_rollback.each do |change|
-          puts 'Rollback'
-          change.print_banner(STDOUT)
+        changes_to_rollback.each do |change|          
+          change.print_banner('ROLLBACK',STDOUT)
 
           change.rollback_sql_collection.to_a(@database).each do |sql|
             puts sql

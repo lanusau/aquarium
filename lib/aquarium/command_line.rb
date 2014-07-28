@@ -1,11 +1,11 @@
 require 'optparse'
 require 'yaml'
-require 'active_record'
+require 'dbi'
+require 'encryptor'
+require 'base64'
 require 'aquarium/database'
 require 'aquarium/parser'
 require 'aquarium/executor'
-require 'aquarium/models/aqu_database'
-require 'aquarium/models/aqu_instance'
 
 module Aquarium
 
@@ -19,20 +19,41 @@ module Aquarium
 
     # Load configuration
     def query_repository
-      ActiveRecord::Base.establish_connection(YAML::load(File.open('database.yml')))
-      instance = AquInstance.find_by_name(@options[:instance_name])
-      @options[:url] = instance.url
-      @options[:username] = instance.username
-      @options[:password] = instance.password
+      config = YAML::load(File.open(@options[:config]))
+      assert_not_null(config,'username')
+      assert_not_null(config,'password')
+      assert_not_null(config,'database')
+      assert_not_null(config,'host')
+      assert_not_null(config,'secret')
+      url = "dbi:Mysql:database=#{config['database']};host=#{config['host']};port=3306"      
+      DBI.connect(url, config['username'], config['password']) do |dbh|
+        row = dbh.select_one("select url,username,salt,password from aqu_instance where name = '#{@options[:instance_name]}'")
+        raise "Did not find database instance \"#{@options[:instance_name]}\" in repository" if row.nil?
+        @options[:url] = row[0]
+        @options[:username] = row[1]
+        @options[:password] = decrypt(row[2],row[3],config['secret'])
+      end
+    end
+
+    def decrypt(salt,password,secret)
+      secret_key = Digest::MD5.digest(secret)
+      iv = Digest::MD5.digest(salt)
+      Encryptor.default_options.merge!(:algorithm => 'aes-128-cbc')
+      Encryptor.decrypt(Base64.decode64(password), :key => secret_key,:iv=>iv)
+    end
+
+    def assert_not_null(config, key)
+      raise "Please set parameter \"#{key}\" in config file" if config[key].nil?
     end
 
     def run
       change_collection= Aquarium::Parser.parse(@options[:file])
       database = Aquarium::Database.database_for(@options)
+      executor = Aquarium::Executor.executor_for(@command).new(database,change_collection,@parameters,STDOUT)
       if @options[:execute]
-        Aquarium::Executor.executor_for(@command).new(database,change_collection,@parameters).execute
-      else
-        Aquarium::Executor.executor_for(@command).new(database,change_collection,@parameters).print
+        executor.execute
+      else        
+        executor.print
       end
     rescue Exception => e      
       puts e.to_s

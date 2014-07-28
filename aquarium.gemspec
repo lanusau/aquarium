@@ -10,7 +10,8 @@ Gem::Specification.new do |gem|
 
   gem.add_runtime_dependency 'dbd-mysql', '~> 0.4'
   gem.add_runtime_dependency 'ruby-oci8', '~> 2.1'
-  gem.add_runtime_dependency 'activerecord', '~> 4.0'
+  gem.add_runtime_dependency  'encryptor', '~> 1.3.0'
+
 
   gem.executables = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   gem.files = `git ls-files`.split("\n")

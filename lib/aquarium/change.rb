@@ -38,12 +38,13 @@ module Aquarium
       end
     end
 
-    def print_banner(logger)
+    def print_banner(operation,logger)
       return if logger.nil?
-      logger << "---------------------------------------------"
-      logger << "-- Change #{@code}"
-      logger << "-- #{@description}" unless @description.empty?
-      logger << "---------------------------------------------"
+      logger << "---------------------------------------------\n"
+      logger << "-- #{operation}\n"
+      logger << "-- CHANGE: #{@code} \n"
+      logger << "-- DESCRIPTION: #{@description}\n" unless @description.empty?
+      logger << "---------------------------------------------\n"
     end
    
   end

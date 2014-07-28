@@ -14,7 +14,7 @@ module Aquarium
         @database = database
         raise 'Please specify change code to apply' if parameters.nil?
         @change_code_to_apply = parameters.shift
-        @change = change_collection.detect{|c| c.code = @change_code_to_apply}
+        @change = change_collection.find_by_code(@change_code_to_apply)        
         raise "Change #{@change_code_to_apply} not found" if @change.nil?
         @logger = logger
       end
@@ -24,7 +24,7 @@ module Aquarium
         
         @database.create_control_table(@logger) if @database.control_table_missing?
 
-        @change.print_banner(@logger)
+        @change.print_banner('APPLY',@logger)
         
         @change.apply_sql_collection.to_a(@database).each do |sql|
           @database.execute(sql)
@@ -42,15 +42,16 @@ module Aquarium
             puts  sql
             puts  ';'
           end
+        end
 
-          @change.print_banner(STDOUT)
-          @change.apply_sql_collection.to_a(@database).each do |sql|
-            puts sql
-            puts ';'
-          end
-          puts  @database.register_change_sql(@change)
+        @change.print_banner('APPLY',STDOUT)
+        @change.apply_sql_collection.to_a(@database).each do |sql|
+          puts sql
           puts ';'
         end
+        puts  @database.register_change_sql(@change)
+        puts ';'
+        
 
 
       end

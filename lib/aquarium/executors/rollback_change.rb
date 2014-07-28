@@ -19,11 +19,9 @@ module Aquarium
       end
 
       def execute
-        raise 'Change is not registered in the database' unless @database.change_registered?(@change)
+        raise 'Change is not registered in the database' unless @database.change_registered?(@change)        
 
-        @logger << 'Rollback' unless @logger.nil?
-
-        @change.print_banner(@logger)
+        @change.print_banner('ROLLBACK',@logger)
         @change.rollback_sql_collection.to_a(@database).each do |sql|
           @database.execute(sql)
         end
@@ -32,9 +30,8 @@ module Aquarium
 
       def print
         raise 'Change is not registered in the database' unless @database.change_registered?(@change)
-
-        puts "Rollback"
-        @change.print_banner(STDOUT)
+        
+        @change.print_banner('ROLLBACK',STDOUT)
 
         change.rollback_sql_collection.to_a(@database).each do |sql|
           puts sql
