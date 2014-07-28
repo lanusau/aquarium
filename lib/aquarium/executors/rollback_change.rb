@@ -10,16 +10,17 @@ module Aquarium
         '   rollback_change - apply single change with code that is passed as a parameter'
       end
 
-      def initialize(database, change_collection,parameters)
+      def initialize(database, change_collection,parameters,logger=STDOUT)
         @database = database
         raise 'Please specify change code to apply' if parameters.nil?
         @change_code_to_apply = parameters.shift
-        @change = change_collection.detect{|c| c.code = @change_code_to_apply}
+        @change = change_collection.find_by_code(@change_code_to_apply)
         raise "Change #{@change_code_to_apply} not found" if @change.nil?
+        @logger = logger
       end
 
       def execute
-        raise 'Change is not registered in the database' unless @database.change_registered?(@change)        
+        raise "Change #{@change.code} is not registered in the database" unless @database.change_registered?(@change)
 
         @change.print_banner('ROLLBACK',@logger)
         @change.rollback_sql_collection.to_a(@database).each do |sql|
@@ -29,11 +30,11 @@ module Aquarium
       end
 
       def print
-        raise 'Change is not registered in the database' unless @database.change_registered?(@change)
+        raise "Change #{@change.code} is not registered in the database" unless @database.change_registered?(@change)
         
         @change.print_banner('ROLLBACK',STDOUT)
 
-        change.rollback_sql_collection.to_a(@database).each do |sql|
+        @change.rollback_sql_collection.to_a(@database).each do |sql|
           puts sql
           puts ';'
         end

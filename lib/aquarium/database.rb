@@ -35,10 +35,10 @@ module Aquarium
     end
 
     def unregister_change(change)
-      if database_change = change_registered?(change)
-        @dbh.do(unregister_change_sql(database_change))
-        @dbh.commit
-      end
+      return unless change_registered?(change)
+      @dbh.do(unregister_change_sql(change))
+      @dbh.commit
+      
     end
 
     def changes_in_database
@@ -55,7 +55,12 @@ module Aquarium
     end
 
     def change_registered?(change)               
-      changes_in_database.detect{|c| c.code == change.code && c.file_name == change.file_name}
+      database_change = changes_in_database.detect{|c| c.code == change.code && c.file_name == change.file_name}
+      return nil if database_change.nil?
+
+      # Also fill in ID attribute which is in database table only
+      change.id = database_change.id
+      return database_change
     end
 
     def control_table_missing?

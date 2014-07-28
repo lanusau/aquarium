@@ -4,7 +4,7 @@ module Aquarium
   autoload :Database, 'aquarium/database'
 
   module Executors
-    autoload :Apply, 'aquarium/executors/apply'
+    autoload :ApplyChange, 'aquarium/executors/apply_change'
     autoload :RollbackChange, 'aquarium/executors/rollback_change'
   end
 end
