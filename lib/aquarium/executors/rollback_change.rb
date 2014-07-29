@@ -2,14 +2,16 @@ require 'aquarium/executor'
 
 module Aquarium
   module Executors
+    # Rollback particular change
     class RollbackChange < Executor
 
       register_executor :rollback_change
 
-      def self.help
+      def self.help #:nodoc:
         '   rollback_change - apply single change with code that is passed as a parameter'
       end
 
+      # Create new executor
       def initialize(database, change_collection,parameters,logger=STDOUT)
         @database = database
         raise 'Please specify change code to apply' if parameters.nil?
@@ -19,6 +21,7 @@ module Aquarium
         @logger = logger
       end
 
+      # Actually execute SQLs
       def execute
         raise "Change #{@change.code} is not registered in the database" unless @database.change_registered?(@change)
 
@@ -29,6 +32,7 @@ module Aquarium
         @database.unregister_change(@change)
       end
 
+        Only print SQLs
       def print
         raise "Change #{@change.code} is not registered in the database" unless @database.change_registered?(@change)
         

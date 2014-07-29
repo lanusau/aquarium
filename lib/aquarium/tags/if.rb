@@ -3,7 +3,7 @@ require 'aquarium/conditional_sql_collection'
 module Aquarium
 
   module Tags
-
+    # IF table
     class If < Aquarium::Tag
       register_tag :if
 
@@ -12,6 +12,7 @@ module Aquarium
         @change_collection = change_collection
       end
 
+      # Parse tag information from current position in the specified file
       def parse(file)
         @conditional_sql_collection.parse(file)
 

@@ -2,6 +2,8 @@ require 'dbi'
 
 
 module Aquarium
+  # Abstract database class, with subclasses Oracle or Mysql implementing
+  # actual specifics of accessing database
   class Database
     attr :dbh
 
@@ -19,21 +21,25 @@ module Aquarium
       
     end
 
+    # Called by subclass to register itself
     def self.register_database
       @@registered_databases << self
     end
 
+    # Execute specified SQL
     def execute(sql)
       @dbh.do(sql)
     rescue DBI::DatabaseError => e
       raise "Got: #{e.message}\nWhen executing:\n#{sql}"
     end
 
+    # Register change
     def register_change(change)
       @dbh.do(register_change_sql(change))
       @dbh.commit
     end
 
+    # Unregister change (rollback)
     def unregister_change(change)
       return unless change_registered?(change)
       @dbh.do(unregister_change_sql(change))
@@ -41,6 +47,7 @@ module Aquarium
       
     end
 
+    # Return all changes in the database ordered by change_id
     def changes_in_database
       return [] if control_table_missing?
       
@@ -54,6 +61,7 @@ module Aquarium
       @changes_in_database
     end
 
+    # Return whether particular change is registered in this database
     def change_registered?(change)               
       database_change = changes_in_database.detect{|c| c.code == change.code && c.file_name == change.file_name}
       return nil if database_change.nil?
@@ -63,6 +71,7 @@ module Aquarium
       return database_change
     end
 
+    # Return whether control table is missing in the database
     def control_table_missing?
       return @control_table_missing unless @control_table_missing.nil?
       row = @dbh.select_one(control_table_missing_sql)
@@ -70,6 +79,7 @@ module Aquarium
       return @control_table_missing
     end
 
+    # Create control table
     def create_control_table(logger)
       logger << "---- Creating control table" unless logger.nil?
       control_table_sqls.each do |sql|

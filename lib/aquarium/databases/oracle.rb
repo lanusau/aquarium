@@ -3,17 +3,20 @@ require 'aquarium/database'
 require 'aquarium/change'
 
 module Aquarium
+  # Oracle database
   class OracleDatabase < Aquarium::Database    
     register_database
 
-    def self.service(url)
+    def self.service(url) #:nodoc:
       url =~ /^dbi:OCI8/ ? true : false
     end
 
+    # Create new object
     def initialize(options)
       @dbh = DBI.connect(options[:url], options[:username], options[:password])
     end
 
+    # SQL list to create control table
     def control_table_sqls
       sql_list = []
 
@@ -44,16 +47,23 @@ END
       return sql_list
     end
 
+    # Register particular change in database
     def register_change_sql(change)
       return <<-END
 insert into aqu_change
-  (change_id,code,file_name,description,execution_date,cmr_number,create_sysdate,update_sysdate,user_update)
+  (change_id,
+   code,file_name,description,
+   execution_date,cmr_number,
+   create_sysdate,update_sysdate,user_update)
 values
-(aqu_primary_key_s.nextval,'#{change.code}','#{change.file_name}','#{change.description}',sysdate,
- #{change.cmr_number},sysdate,sysdate,#{change.user_update})
+  (aqu_primary_key_s.nextval,
+   '#{change.code}','#{change.file_name}','#{change.description}',
+   sysdate, '#{change.cmr_number}',
+   sysdate,sysdate,'#{change.user_update}')
 END
     end
 
+    # Unregister particular change from database
     def unregister_change_sql(change)
       return <<-END
 delete from aqu_change
@@ -61,6 +71,7 @@ where change_id = #{change.id}
 END
     end
 
+    # Return whether control table is missing from the dataatabase
     def control_table_missing_sql
       sql = <<-END
        select count(*) from all_tables

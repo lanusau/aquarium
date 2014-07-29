@@ -2,14 +2,16 @@ require 'aquarium/executor'
 
 module Aquarium
   module Executors
+    # Apply particular change
     class ApplyChange < Executor
 
       register_executor :apply_change
 
-      def self.help
+      def self.help #:nodoc:
         '   apply_change - apply single change with code that is passed as a parameter'
       end
 
+      # Create new executor
       def initialize(database, change_collection,parameters,logger=STDOUT)
         @database = database
         raise 'Please specify change code to apply' if parameters.nil?
@@ -19,6 +21,7 @@ module Aquarium
         @logger = logger
       end
 
+      # Actually execute SQL
       def execute
         raise 'Change already registered in the database' if @database.change_registered?(@change)
         
@@ -32,6 +35,7 @@ module Aquarium
         @database.register_change(@change)
       end
 
+      # Only print SQLs
       def print
         raise 'Change already registered in the database' if @database.change_registered?(@change)
         

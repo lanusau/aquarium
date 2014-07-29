@@ -2,9 +2,10 @@ require 'aquarium/tag'
 require 'aquarium/change_collection'
 
 module Aquarium
-
+  # Parser class parses change file
   class Parser
 
+    # Class method to parse particular file
     def self.parse(file)
 
       change_collection = Aquarium::ChangeCollection.new

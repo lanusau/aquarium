@@ -9,15 +9,17 @@ require 'aquarium/executor'
 
 module Aquarium
 
+  # This is a wrapper class to be used from command line
   class CommandLine
     attr :options
 
+    # Create new command line object
     def initialize(args)
       process_options(args)
       query_repository
     end
 
-    # Load configuration
+    # Query repository for the database instance data
     def query_repository
       config = YAML::load(File.open(@options[:config]))
       assert_not_null(config,'username')
@@ -35,6 +37,7 @@ module Aquarium
       end
     end
 
+    # Decrypt password using salt and secret
     def decrypt(salt,password,secret)
       secret_key = Digest::MD5.digest(secret)
       iv = Digest::MD5.digest(salt)
@@ -42,10 +45,12 @@ module Aquarium
       Encryptor.decrypt(Base64.decode64(password), :key => secret_key,:iv=>iv)
     end
 
+    # Assert particular key (parameter) in the has is not null
     def assert_not_null(config, key)
       raise "Please set parameter \"#{key}\" in config file" if config[key].nil?
     end
 
+    # Run specified command
     def run
       change_collection= Aquarium::Parser.parse(@options[:file])
       database = Aquarium::Database.database_for(@options)
@@ -57,15 +62,16 @@ module Aquarium
       end
     rescue Exception => e      
       puts e.to_s
-      e.backtrace.each{|line| puts line}
+      #e.backtrace.each{|line| puts line}
     end
 
+    # Process options
     def process_options(args)
       @options = {}
       @options[:config] = 'repo.yml'
       @options[:execute] = false
       optparse = OptionParser.new do |opts|
-        opts.banner = "Usage: aq [OPTIONS] COMMAND"
+        opts.banner = "Usage: aq [OPTIONS] COMMAND [PARAMETERS]"
         opts.separator ""
         opts.separator "Options:"        
         opts.on("-f", "--file CHANGEFILE", "File with changes") do |config|

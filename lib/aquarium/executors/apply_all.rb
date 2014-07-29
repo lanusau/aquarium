@@ -2,14 +2,16 @@ require 'aquarium/executor'
 
 module Aquarium
   module Executors
+    # Apply all pending changes
     class ApplyAll < Executor
 
       register_executor :apply_all
 
-      def self.help
+      def self.help #:nodoc:
         '   apply_all - apply all pending changes for this database instance'
       end
 
+      # Create new executor
       def initialize(database, change_collection,parameters,logger=STDOUT)
         @database = database
         @change_collection = change_collection

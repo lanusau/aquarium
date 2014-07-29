@@ -1,6 +1,8 @@
 module Aquarium
+  # Class to store a collection of Changes
   class ChangeCollection
 
+    # Create new change collection
     def initialize
       @change_collection = []
       @current_change = -1

@@ -7,6 +7,7 @@ Gem::Specification.new do |gem|
   gem.description = %q{Aquarium - database change manegement}
   gem.summary = %q{Aqarium - database change manegement}
   gem.homepage = "https://github.com/lanusau/aquarium"
+  gem.license = 'MIT'
 
   gem.add_runtime_dependency 'dbd-mysql', '~> 0.4'
   gem.add_runtime_dependency 'ruby-oci8', '~> 2.1'

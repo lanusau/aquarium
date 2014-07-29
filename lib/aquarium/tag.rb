@@ -1,5 +1,5 @@
 module Aquarium
-
+  # Abstract class to store information about tag
   class Tag
     @@registered_tags = { }
 
@@ -24,6 +24,7 @@ module Aquarium
       END
     end
 
+    # Match file line to a particular tag
     def self.match(line,file_name,change_collection)
       if line =~ /--\#(\w+)\s+(.*)/
         tag = $1.downcase.to_sym

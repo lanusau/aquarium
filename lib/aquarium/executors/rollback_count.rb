@@ -2,14 +2,16 @@ require 'aquarium/executor'
 
 module Aquarium
   module Executors
+    # Rollback specified number of changes
     class RollbackCount < Executor
 
       register_executor :rollback_count
 
-      def self.help
+      def self.help #:nodoc:
         '   rollback_count - rollback N number of changes in the reverse order that they were applied. N should be specified as a parameter'
       end
 
+      # Create new executor
       def initialize(database, change_collection,parameters,logger=STDOUT)
         @database = database
         @change_collection = change_collection
@@ -19,6 +21,7 @@ module Aquarium
         @logger = logger
       end
 
+      # Actually execute SQLs
       def execute
         # Nothing to do if control table is missing
         return if @database.control_table_missing?
@@ -47,6 +50,7 @@ module Aquarium
         end
       end
 
+      # Only print SQLs
       def print
         # Nothing to do if control table is missing
         return if @database.control_table_missing?

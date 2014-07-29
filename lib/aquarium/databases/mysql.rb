@@ -2,18 +2,21 @@ require 'dbi'
 require 'aquarium/database'
 
 module Aquarium
+  # MySQL database
   class MySQLDatabase < Aquarium::Database
     
     register_database
 
-    def self.service(url)
+    def self.service(url) #:nodoc:
       url =~ /^dbi:Mysql/ ? true : false
     end
 
+    # Create new object
     def initialize(options)     
       @dbh = DBI.connect(options[:url], options[:username], options[:password])
     end
 
+    # Return SQL needed to create new control table
     def control_table_sqls
       sql_list = []
 
@@ -36,17 +39,22 @@ create table aqu_change (
 END
       return sql_list
     end
-    
+
+    # Register change in the database
     def register_change_sql(change)
       return <<-END
 insert into aqu_change
-  (code,file_name,description,execution_date,cmr_number,create_sysdate,update_sysdate,user_update)
+  (code,file_name,description,
+   execution_date,cmr_number,
+   create_sysdate,update_sysdate,user_update)
 values
-('#{change.code}','#{change.file_name}','#{change.description}',now(),
-'#{change.cmr_number}',now(),now(),'#{change.user_update}')
+  ('#{change.code}','#{change.file_name}','#{change.description}',
+   now(),'#{change.cmr_number}',
+   now(),now(),'#{change.user_update}')
 END
     end
 
+    # Unregister change from the database
     def unregister_change_sql(change)
       return <<-END
 delete from aqu_change
@@ -54,6 +62,7 @@ where change_id = #{change.id}
 END
     end
 
+    # Return whether control table is missing
     def control_table_missing_sql
       sql = <<-END
        select count(*) from information_schema.tables

@@ -1,6 +1,7 @@
 require 'aquarium/sql_collection'
 
 module Aquarium
+  # Change class holds information about single change in the change log file
   class Change
     attr :id, true
     attr :code
@@ -11,6 +12,7 @@ module Aquarium
     attr :cmr_number, true
     attr :user_update, true
 
+    # Create new change with specified code, file name and description
     def initialize(code,file_name,description,id=nil)
       @code = code
       @file_name = file_name
@@ -23,10 +25,12 @@ module Aquarium
       @user_update = ENV['LOGNAME']
     end
 
+    # Set current SQL collection to either :apply or :rollback
     def current_sql_collection=(name)
       @current_sql_collection = name
     end
 
+    # Return current SQL collection (either apply or rollback)
     def current_sql_collection
       case @current_sql_collection
       when :apply
@@ -38,6 +42,7 @@ module Aquarium
       end
     end
 
+    # Print banner text for this change
     def print_banner(operation,logger)
       return if logger.nil?
       logger << "---------------------------------------------\n"
