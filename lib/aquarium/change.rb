@@ -20,7 +20,7 @@ module Aquarium
       @rollback_sql_collection = Aquarium::SqlCollection.new
       @current_sql_collection = :apply
       @cmr_number = ''
-      @user_update = ''
+      @user_update = ENV['LOGNAME']
     end
 
     def current_sql_collection=(name)
