@@ -32,7 +32,7 @@ module Aquarium
         @database.unregister_change(@change)
       end
 
-        Only print SQLs
+      # Only print SQLs
       def print
         raise "Change #{@change.code} is not registered in the database" unless @database.change_registered?(@change)
         
