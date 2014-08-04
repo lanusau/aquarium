@@ -16,7 +16,7 @@ module Aquarium
         @database = database
         raise 'Please specify change code to apply' if parameters.nil?
         @change_code_to_apply = parameters.shift
-        @change = change_collection.find_by_code(@change_code_to_apply)
+        @change = change_collection.find(@change_code_to_apply)
         raise "Change #{@change_code_to_apply} not found" if @change.nil?
         @logger = logger
       end

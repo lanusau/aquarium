@@ -25,7 +25,7 @@ module Aquarium
         @change.current_sql_collection = :apply
 
         # {change} tag terminates current change
-        change_collection.next_change(@change)
+        change_collection.add_change(@change)
       end
 
       # Parse tag information from current position in the specified file

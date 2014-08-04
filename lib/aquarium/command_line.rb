@@ -51,10 +51,11 @@ module Aquarium
     end
 
     # Run specified command
-    def run
+    def run      
       change_collection= Aquarium::Parser.parse(@options[:file])
       database = Aquarium::Database.database_for(@options)
       executor = Aquarium::Executor.executor_for(@command).new(database,change_collection,@parameters,STDOUT)
+      
       if @options[:execute]
         executor.execute
       else        

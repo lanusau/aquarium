@@ -5,7 +5,7 @@ module Aquarium
   class Change
     attr :id, true
     attr :code
-    attr :file_name
+    attr :file_name, true
     attr :description
     attr :apply_sql_collection
     attr :rollback_sql_collection

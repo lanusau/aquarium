@@ -8,7 +8,7 @@ module Aquarium
     # Class method to parse particular file
     def self.parse(file)
 
-      change_collection = Aquarium::ChangeCollection.new
+      change_collection = Aquarium::ChangeCollection.new(file)
       File.open(file, "r") do |f|       
 
         while line = f.gets
