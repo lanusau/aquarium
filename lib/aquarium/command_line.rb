@@ -15,12 +15,18 @@ module Aquarium
 
     # Create new command line object
     def initialize(args)
+      # Below is needed to shut up Oracle DBI driver
+      ENV['NLS_LANG']='AMERICAN_AMERICA.US7ASCII'
       process_options(args)
       query_repository
+    rescue Exception => e
+      puts e.to_s
+      exit!
     end
 
     # Query repository for the database instance data
     def query_repository
+      raise "Can not open onfig file #{@options[:config]}" unless File.exists?(@options[:config]) and File.readable?(@options[:config])
       config = YAML::load(File.open(@options[:config]))
       assert_not_null(config,'username')
       assert_not_null(config,'password')

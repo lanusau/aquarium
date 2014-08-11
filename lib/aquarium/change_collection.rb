@@ -60,5 +60,10 @@ module Aquarium
       return @pending_change_collection
     end
 
+    # Return list of changes in reverse order
+    def reverse
+      @change_collection.reverse
+    end
+
   end
 end
