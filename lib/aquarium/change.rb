@@ -13,7 +13,7 @@ module Aquarium
     attr :user_update, true
 
     # Create new change with specified code, file name and description
-    def initialize(code,file_name,description,id=nil)
+    def initialize(code,file_name,description,id=nil,cmr_number=nil,user_update=nil)
       @code = code
       @file_name = file_name
       @description = description
@@ -21,8 +21,8 @@ module Aquarium
       @apply_sql_collection = Aquarium::SqlCollection.new
       @rollback_sql_collection = Aquarium::SqlCollection.new
       @current_sql_collection = :apply
-      @cmr_number = ''
-      @user_update = ENV['LOGNAME']
+      @cmr_number = cmr_number || ''
+      @user_update = user_update || ENV['LOGNAME']
     end
 
     # Set current SQL collection to either :apply or :rollback

@@ -54,8 +54,8 @@ module Aquarium
       # Cache all changes on first call
       if @changes_in_database.nil?
         @changes_in_database = []
-        @dbh.select_all('select code,file_name,description,change_id from aqu_change order by change_id asc') do | row |
-            @changes_in_database << Aquarium::Change.new(row[0],row[1],row[2],row[3])
+        @dbh.select_all('select code,file_name,description,change_id,cmr_number,user_update from aqu_change order by change_id asc') do | row |
+            @changes_in_database << Aquarium::Change.new(row[0],row[1],row[2],row[3],row[4],row[5])
         end
       end
       @changes_in_database
