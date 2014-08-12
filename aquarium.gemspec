@@ -13,6 +13,7 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency 'ruby-oci8', '~> 2.1'
   gem.add_runtime_dependency  'encryptor', '~> 1.3'
 
+  gem.add_development_dependency 'rspec'
 
   gem.executables = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   gem.files = `git ls-files`.split("\n")
