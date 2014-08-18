@@ -1,3 +1,5 @@
+require 'aquarium/execution_exception'
+
 module Aquarium
   # Abstract class for executors
   class Executor
@@ -20,6 +22,109 @@ module Aquarium
     # Return all registered executors
     def self.registered_executors
       @@registered_executors.values
+    end
+
+    # Create new executor
+    def initialize(database, parser,parameters,logger=STDOUT)
+      @parser = parser
+      @database = database
+      @change_collection = @parser.parse
+      @logger = logger
+      @parameters = parameters
+    end
+
+    # Apply particular change, with re-try logic
+    def apply_change(change)
+      change.print_banner('APPLY',@logger)
+
+      sql_collection = change.apply_sql_collection.to_a(@database)
+      start_with = 0
+      begin
+        execute_collection(sql_collection,start_with)
+      rescue Aquarium::ExecutionException => e        
+        puts("Error: #{e.message}")
+        puts("When executing:")
+        puts(e.sql)
+        begin
+          response = get_response("[R]etry,[A]bort or [P]arse file and retry ?")
+          case response
+          when 'R'
+            puts('Retrying ...')
+            start_with = e.index
+            retry
+          when 'A'
+            raise 'Aborted'
+          when 'P'
+            puts('Reparsing file ...')
+            # Re-parse file and retry again at the same index
+            @change_collection = @parser.parse
+            change = @change_collection.find!(change.code)
+            sql_collection = change.apply_sql_collection.to_a(@database)
+            start_with = e.index
+            puts('Retrying ...')
+            retry
+          end
+        end
+      end     
+    end
+
+    # Rollback particular change, with re-try logic
+    def rollback_change(change)
+      change.print_banner('ROLLBACK',@logger)
+
+      sql_collection = change.rollback_sql_collection.to_a(@database)
+      start_with = 0
+      begin
+        execute_collection(sql_collection,start_with)
+      rescue Aquarium::ExecutionException => e
+        puts("Error: #{e.message}")
+        puts("When executing:")
+        puts(e.sql)
+        begin
+          response = get_response("[R]etry,[A]bort or [P]arse file again and retry ?")
+          case response
+          when 'R'
+            puts('Retrying ...')
+            start_with = e.index
+            retry
+          when 'A'
+            raise 'Aborted'
+          when 'P'
+            puts('Reparsing file ...')
+            # Re-parse file and retry again at the same index
+            @change_collection = @parser.parse
+            change = @change_collection.find!(change.code)
+            sql_collection = change.rollback_sql_collection.to_a(@database)
+            start_with = e.index
+            puts('Retrying ...')
+            retry
+          end
+        end
+      end
+    end
+
+    # Execute particular SQL collection
+    def execute_collection(sql_collection,start_with)
+      sql_collection.each_with_index do |sql,index|
+        next if index < start_with
+        begin
+          @database.execute(sql)
+        rescue DBI::DatabaseError => e
+          raise Aquarium::ExecutionException.new(sql,index), e.message
+        end
+
+      end
+    end
+
+    # Get response, retrying until its valid
+    def get_response(message)
+      response = ''
+      loop do
+        puts(message)
+        response = gets.chop.upcase
+        break if response =~ /^[RAP]{1}/
+      end
+      return response
     end
 
   end

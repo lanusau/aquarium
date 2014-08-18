@@ -27,10 +27,8 @@ module Aquarium
     end
 
     # Execute specified SQL
-    def execute(sql)
-      @dbh.do(sql)
-    rescue DBI::DatabaseError => e
-      raise "Got: #{e.message}\nWhen executing:\n#{sql}"
+    def execute(sql)      
+        @dbh.do(sql)
     end
 
     # Register change

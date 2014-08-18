@@ -12,23 +12,18 @@ module Aquarium
       end
 
       # Create new executor
-      def initialize(database, change_collection,parameters,logger=STDOUT)
-        @database = database
+      def initialize(database, parser,parameters,logger=STDOUT)
+        super
         raise 'Please specify change code to apply' if parameters.nil?
-        @change_code_to_apply = parameters.shift
-        @change = change_collection.find(@change_code_to_apply)
-        raise "Change #{@change_code_to_apply} not found" if @change.nil?
-        @logger = logger
+        @change_code_to_rollback = parameters.shift
+        @change = @change_collection.find(@change_code_to_rollback)
+        raise "Change #{@change_code_to_rollback} not found" if @change.nil?
       end
 
       # Actually execute SQLs
       def execute
         raise "Change #{@change.code} is not registered in the database" unless @database.change_registered?(@change)
-
-        @change.print_banner('ROLLBACK',@logger)
-        @change.rollback_sql_collection.to_a(@database).each do |sql|
-          @database.execute(sql)
-        end
+        rollback_change(@change)
         @database.unregister_change(@change)
       end
 

@@ -16,7 +16,7 @@ module Aquarium
 
       # Parse tag information from current position in the specified file
       def parse(file)
-        include_change_collection = Aquarium::Parser.parse(@include_file_name)
+        include_change_collection = Aquarium::Parser.new(@include_file_name).parse
         @change_collection.merge(include_change_collection)
       end
 

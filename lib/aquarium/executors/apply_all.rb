@@ -11,14 +11,6 @@ module Aquarium
         '   apply_all - apply all pending changes for this database instance'
       end
 
-      # Create new executor
-      def initialize(database, change_collection,parameters,logger=STDOUT)
-        @database = database
-        @change_collection = change_collection
-        @logger = logger
-        @parameters = parameters
-      end
-
       # Actually execute SQLs
       def execute
 
@@ -26,11 +18,7 @@ module Aquarium
 
         @change_collection.pending_changes(@database).each do |change|
 
-         change.print_banner('APPLY',@logger)
-          
-          change.apply_sql_collection.to_a(@database).each do |sql|
-            @database.execute(sql)
-          end
+          apply_change(@change)
           @database.register_change(change)
         end
       end

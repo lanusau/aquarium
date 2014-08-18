@@ -5,14 +5,19 @@ module Aquarium
   # Parser class parses change file
   class Parser
 
-    # Class method to parse particular file
-    def self.parse(file)
+    # Create Parser instance
+    def initialize(file_name)
+      @file_name = file_name
+    end
 
-      change_collection = Aquarium::ChangeCollection.new(file)
-      File.open(file, "r") do |f|       
+    # Parse file and return change collection
+    def parse
+
+      change_collection = Aquarium::ChangeCollection.new(@file_name)
+      File.open(@file_name, "r") do |f|
 
         while line = f.gets
-          if tag = Aquarium::Tag.match(line,file,change_collection)
+          if tag = Aquarium::Tag.match(line,@file_name,change_collection)
             tag.parse(f)
           else
             if !change_collection.current_change.nil?

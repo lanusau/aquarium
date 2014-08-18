@@ -12,13 +12,11 @@ module Aquarium
       end
 
       # Create new executor
-      def initialize(database, change_collection,parameters,logger=STDOUT)
-        @database = database
-        @change_collection = change_collection
+      def initialize(database, parser,parameters,logger=STDOUT)
+        super
         raise "Rollback requires parameter - number of changes to rollback" if parameters.nil?
         @count = parameters.shift.to_i
-        raise "Invalid number of changes to rollback" if @count == 0
-        @logger = logger
+        raise "Invalid number of changes to rollback" if @count == 0        
       end
 
       # Actually execute SQLs
@@ -41,11 +39,7 @@ module Aquarium
         end
 
         changes_to_rollback.each do |change|
-          change.print_banner('ROLLBACK',@logger)
-
-          change.rollback_sql_collection.to_a(@database).each do |sql|
-            @database.execute(sql)
-          end
+          rollback_change(change)
           @database.unregister_change(change)
         end
       end

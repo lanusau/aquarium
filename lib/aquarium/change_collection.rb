@@ -44,6 +44,13 @@ module Aquarium
       @change_collection.detect{|c| c.code == change_code}
     end
 
+    # Find particular change by code, raise exception if not found
+    def find!(change_code)
+      change = @change_collection.detect{|c| c.code == change_code}
+      raise "Change #{change_code} not found" if change.nil?
+      return change
+    end
+
     # Return list of changes that have not been applied yet
     def pending_changes(database)      
       return @pending_change_collection unless @pending_change_collection.nil?

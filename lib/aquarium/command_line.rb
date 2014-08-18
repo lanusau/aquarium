@@ -49,6 +49,8 @@ module Aquarium
       iv = Digest::MD5.digest(salt)
       Encryptor.default_options.merge!(:algorithm => 'aes-128-cbc')
       Encryptor.decrypt(Base64.decode64(password), :key => secret_key,:iv=>iv)
+    rescue Exception => e
+      raise 'Decryption failed. Please check if "secret" parameter is set correctly in configuration file'
     end
 
     # Assert particular key (parameter) in the has is not null
@@ -57,10 +59,10 @@ module Aquarium
     end
 
     # Run specified command
-    def run      
-      change_collection= Aquarium::Parser.parse(@options[:file])
+    def run
+      parser = Aquarium::Parser.new(@options[:file])      
       database = Aquarium::Database.database_for(@options)
-      executor = Aquarium::Executor.executor_for(@command).new(database,change_collection,@parameters,STDOUT)
+      executor = Aquarium::Executor.executor_for(@command).new(database,parser,@parameters,STDOUT)
       
       if @options[:execute]
         executor.execute
