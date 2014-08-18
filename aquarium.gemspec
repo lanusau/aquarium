@@ -12,6 +12,7 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency 'dbd-mysql', '~> 0.4'
   gem.add_runtime_dependency 'ruby-oci8', '~> 2.1'
   gem.add_runtime_dependency  'encryptor', '~> 1.3'
+  gem.add_runtime_dependency  'colored', '~> 1.2'
 
   gem.add_development_dependency 'rspec', '~> 3.0'
 

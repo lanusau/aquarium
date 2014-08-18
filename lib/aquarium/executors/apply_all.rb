@@ -18,7 +18,7 @@ module Aquarium
 
         @change_collection.pending_changes(@database).each do |change|
 
-          apply_change(@change)
+          apply_change(change)
           @database.register_change(change)
         end
       end

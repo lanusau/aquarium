@@ -42,9 +42,11 @@ module Aquarium
       begin
         execute_collection(sql_collection,start_with)
       rescue Aquarium::ExecutionException => e        
-        puts("Error: #{e.message}")
-        puts("When executing:")
-        puts(e.sql)
+        puts "Error: #{e.message}".red
+        puts "When executing:".red
+        puts "-----------------------------".red
+        puts e.sql.red
+        puts "-----------------------------".red
         begin
           response = get_response("[R]etry,[A]bort or [P]arse file and retry ?")
           case response
@@ -65,7 +67,8 @@ module Aquarium
             retry
           end
         end
-      end     
+      end
+      puts 'Applied successfully'.green
     end
 
     # Rollback particular change, with re-try logic
@@ -77,9 +80,11 @@ module Aquarium
       begin
         execute_collection(sql_collection,start_with)
       rescue Aquarium::ExecutionException => e
-        puts("Error: #{e.message}")
-        puts("When executing:")
-        puts(e.sql)
+        puts "Error: #{e.message}".red
+        puts "When executing:".red
+        puts "-----------------------------".red
+        puts e.sql.red
+        puts "-----------------------------".red
         begin
           response = get_response("[R]etry,[A]bort or [P]arse file again and retry ?")
           case response
@@ -101,6 +106,7 @@ module Aquarium
           end
         end
       end
+      puts 'Rolled back successfully'.green
     end
 
     # Execute particular SQL collection

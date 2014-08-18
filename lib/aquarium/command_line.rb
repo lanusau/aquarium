@@ -3,6 +3,7 @@ require 'yaml'
 require 'dbi'
 require 'encryptor'
 require 'base64'
+require 'colored'
 require 'aquarium/database'
 require 'aquarium/parser'
 require 'aquarium/executor'
@@ -20,7 +21,7 @@ module Aquarium
       process_options(args)
       query_repository
     rescue Exception => e
-      puts e.to_s
+      puts e.to_s.red
       exit!
     end
 
@@ -70,7 +71,7 @@ module Aquarium
         executor.print
       end
     rescue Exception => e      
-      puts e.to_s
+      puts e.to_s.red
       #e.backtrace.each{|line| puts line}
     end
 
