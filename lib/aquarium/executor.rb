@@ -41,30 +41,35 @@ module Aquarium
       start_with = 0
       begin
         execute_collection(sql_collection,start_with)
-      rescue Aquarium::ExecutionException => e        
-        puts "Error: #{e.message}".red
-        puts "When executing:".red
-        puts "-----------------------------".red
-        puts e.sql.red
-        puts "-----------------------------".red
-        begin
-          response = get_response("[R]etry,[A]bort or [P]arse file and retry ?")
-          case response
-          when 'R'
-            puts('Retrying ...')
-            start_with = e.index
-            retry
-          when 'A'
-            raise 'Aborted'
-          when 'P'
-            puts('Reparsing file ...')
-            # Re-parse file and retry again at the same index
-            @change_collection = @parser.parse
-            change = @change_collection.find!(change.code)
-            sql_collection = change.apply_sql_collection.to_a(@database)
-            start_with = e.index
-            puts('Retrying ...')
-            retry
+      rescue Aquarium::ExecutionException => e
+        # If logger is nil, that means we are not in interactive mode
+        if @logger.nil?
+          raise
+        else
+          puts "Error: #{e.message}".red
+          puts "When executing:".red
+          puts "-----------------------------".red
+          puts e.sql.red
+          puts "-----------------------------".red
+          begin
+            response = get_response("[R]etry,[A]bort or [P]arse file and retry ?")
+            case response
+            when 'R'
+              puts('Retrying ...')
+              start_with = e.index
+              retry
+            when 'A'
+              raise 'Aborted'
+            when 'P'
+              puts('Reparsing file ...')
+              # Re-parse file and retry again at the same index
+              @change_collection = @parser.parse
+              change = @change_collection.find!(change.code)
+              sql_collection = change.apply_sql_collection.to_a(@database)
+              start_with = e.index
+              puts('Retrying ...')
+              retry
+            end
           end
         end
       end
@@ -80,29 +85,34 @@ module Aquarium
       begin
         execute_collection(sql_collection,start_with)
       rescue Aquarium::ExecutionException => e
-        puts "Error: #{e.message}".red
-        puts "When executing:".red
-        puts "-----------------------------".red
-        puts e.sql.red
-        puts "-----------------------------".red
-        begin
-          response = get_response("[R]etry,[A]bort or [P]arse file again and retry ?")
-          case response
-          when 'R'
-            puts('Retrying ...')
-            start_with = e.index
-            retry
-          when 'A'
-            raise 'Aborted'
-          when 'P'
-            puts('Reparsing file ...')
-            # Re-parse file and retry again at the same index
-            @change_collection = @parser.parse
-            change = @change_collection.find!(change.code)
-            sql_collection = change.rollback_sql_collection.to_a(@database)
-            start_with = e.index
-            puts('Retrying ...')
-            retry
+        # If logger is nil, that means we are not in interactive mode
+        if @logger.nil?
+          raise
+        else
+          puts "Error: #{e.message}".red
+          puts "When executing:".red
+          puts "-----------------------------".red
+          puts e.sql.red
+          puts "-----------------------------".red
+          begin
+            response = get_response("[R]etry,[A]bort or [P]arse file again and retry ?")
+            case response
+            when 'R'
+              puts('Retrying ...')
+              start_with = e.index
+              retry
+            when 'A'
+              raise 'Aborted'
+            when 'P'
+              puts('Reparsing file ...')
+              # Re-parse file and retry again at the same index
+              @change_collection = @parser.parse
+              change = @change_collection.find!(change.code)
+              sql_collection = change.rollback_sql_collection.to_a(@database)
+              start_with = e.index
+              puts('Retrying ...')
+              retry
+            end
           end
         end
       end
