@@ -2,7 +2,8 @@ module Aquarium
   # Class to store collection of SQL statements
   class SqlCollection
 
-    DELIMITER = /[;\/]/
+    # Either ; or / followed by new line
+    DELIMITER = /;\s*\n|\/\s*\n/
 
     attr :sql_collection
 
