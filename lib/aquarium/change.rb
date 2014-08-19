@@ -43,13 +43,13 @@ module Aquarium
     end
 
     # Print banner text for this change
-    def print_banner(operation,logger)
-      return if logger.nil?
-      logger << "---------------------------------------------\n"
-      logger << "-- #{operation}\n"
-      logger << "-- CHANGE: #{@code} \n"
-      logger << "-- DESCRIPTION: #{@description}\n" unless @description.empty?
-      logger << "---------------------------------------------\n"
+    def print_banner(operation,options)
+      return unless options[:interactive]
+      puts "---------------------------------------------"
+      puts "-- #{operation}"
+      puts "-- CHANGE: #{@code}"
+      puts "-- DESCRIPTION: #{@description}" unless @description.empty?
+      puts "---------------------------------------------"
     end
    
   end

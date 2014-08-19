@@ -12,7 +12,7 @@ module Aquarium
       end
 
       # Create new executor
-      def initialize(database, parser,parameters,logger=STDOUT)
+      def initialize(database, parser,parameters,options)
         super
         raise "Rollback requires parameter - number of changes to rollback" if parameters.nil?
         @count = parameters.shift.to_i
@@ -64,7 +64,7 @@ module Aquarium
         end
 
         changes_to_rollback.each do |change|          
-          change.print_banner('ROLLBACK',STDOUT)
+          change.print_banner('ROLLBACK',@options)
 
           change.rollback_sql_collection.to_a(@database).each do |sql|
             puts sql

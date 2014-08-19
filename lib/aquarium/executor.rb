@@ -25,27 +25,24 @@ module Aquarium
     end
 
     # Create new executor
-    def initialize(database, parser,parameters,logger=STDOUT)
+    def initialize(database, parser,parameters,options)
       @parser = parser
       @database = database
       @change_collection = @parser.parse
-      @logger = logger
+      @options = options
       @parameters = parameters
     end
 
     # Apply particular change, with re-try logic
     def apply_change(change)
-      change.print_banner('APPLY',@logger)
+      change.print_banner('APPLY',@options)
 
       sql_collection = change.apply_sql_collection.to_a(@database)
       start_with = 0
       begin
         execute_collection(sql_collection,start_with)
-      rescue Aquarium::ExecutionException => e
-        # If logger is nil, that means we are not in interactive mode
-        if @logger.nil?
-          raise
-        else
+      rescue Aquarium::ExecutionException => e        
+        if @options[:interactive]
           puts "Error: #{e.message}".red
           puts "When executing:".red
           puts "-----------------------------".red
@@ -71,24 +68,23 @@ module Aquarium
               retry
             end
           end
+        else
+          raise
         end
       end
-      puts 'Applied successfully'.green
+      puts 'Applied successfully'.green if @options[:interactive]
     end
 
     # Rollback particular change, with re-try logic
     def rollback_change(change)
-      change.print_banner('ROLLBACK',@logger)
+      change.print_banner('ROLLBACK',@options)
 
       sql_collection = change.rollback_sql_collection.to_a(@database)
       start_with = 0
       begin
         execute_collection(sql_collection,start_with)
       rescue Aquarium::ExecutionException => e
-        # If logger is nil, that means we are not in interactive mode
-        if @logger.nil?
-          raise
-        else
+        if @options[:interactive]
           puts "Error: #{e.message}".red
           puts "When executing:".red
           puts "-----------------------------".red
@@ -114,9 +110,11 @@ module Aquarium
               retry
             end
           end
+        else
+          raise
         end
       end
-      puts 'Rolled back successfully'.green
+      puts 'Rolled back successfully'.green if @options[:interactive]
     end
 
     # Execute particular SQL collection

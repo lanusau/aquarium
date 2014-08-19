@@ -78,8 +78,8 @@ module Aquarium
     end
 
     # Create control table
-    def create_control_table(logger)
-      logger << "---- Creating control table" unless logger.nil?
+    def create_control_table(options)
+      puts "---- Creating control table" if options[:interactive]
       control_table_sqls.each do |sql|
         execute(sql)
       end

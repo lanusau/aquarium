@@ -12,7 +12,7 @@ module Aquarium
       end
 
       # Create new executor
-      def initialize(database, parser,parameters,logger=STDOUT)
+      def initialize(database, parser,parameters,options)
         super
         raise 'Please specify change code to apply' if parameters.nil?
         @change_code_to_rollback = parameters.shift
@@ -31,7 +31,7 @@ module Aquarium
       def print
         raise "Change #{@change.code} is not registered in the database" unless @database.change_registered?(@change)
         
-        @change.print_banner('ROLLBACK',STDOUT)
+        @change.print_banner('ROLLBACK',@options)
 
         @change.rollback_sql_collection.to_a(@database).each do |sql|
           puts sql

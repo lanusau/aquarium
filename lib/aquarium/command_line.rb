@@ -61,9 +61,10 @@ module Aquarium
 
     # Run specified command
     def run
+      @options[:interactive] = true
       parser = Aquarium::Parser.new(@options[:file])      
       database = Aquarium::Database.database_for(@options)
-      executor = Aquarium::Executor.executor_for(@command).new(database,parser,@parameters,STDOUT)
+      executor = Aquarium::Executor.executor_for(@command).new(database,parser,@parameters,@options)
       
       if @options[:execute]
         executor.execute

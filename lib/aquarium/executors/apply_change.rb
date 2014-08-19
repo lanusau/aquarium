@@ -12,7 +12,7 @@ module Aquarium
       end
 
       # Create new executor
-      def initialize(database, parser,parameters,logger=STDOUT)
+      def initialize(database, parser,parameters,options)
         super        
         raise 'Please specify change code to apply' if parameters.nil?
         @change_code_to_apply = parameters.shift
@@ -24,7 +24,7 @@ module Aquarium
       def execute
         raise 'Change already registered in the database' if @database.change_registered?(@change)
         
-        @database.create_control_table(@logger) if @database.control_table_missing?
+        @database.create_control_table(@options) if @database.control_table_missing?
         apply_change(@change)
         @database.register_change(@change)
       end
@@ -42,7 +42,7 @@ module Aquarium
           end
         end
 
-        @change.print_banner('APPLY',STDOUT)
+        @change.print_banner('APPLY',@options)
         @change.apply_sql_collection.to_a(@database).each do |sql|
           puts sql
           puts ';'

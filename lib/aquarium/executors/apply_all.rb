@@ -14,7 +14,7 @@ module Aquarium
       # Actually execute SQLs
       def execute
 
-        @database.create_control_table(@logger) if @database.control_table_missing?
+        @database.create_control_table(@options) if @database.control_table_missing?
 
         @change_collection.pending_changes(@database).each do |change|
 
@@ -35,7 +35,7 @@ module Aquarium
         end
 
         @change_collection.pending_changes(@database).each do |change|
-          change.print_banner('APPLY',STDOUT)
+          change.print_banner('APPLY',@options)
           change.apply_sql_collection.to_a(@database).each do |sql|
             puts sql
             puts ';'
