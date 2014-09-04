@@ -9,6 +9,8 @@ module Aquarium
   autoload :CommandLine, 'aquarium/command_line'
   autoload :Parser, 'aquarium/parser'
   autoload :Database, 'aquarium/database'
+  autoload :ChangeCollection, 'aquarium/change_collection'
+  autoload :Change, 'aquarium/change'
 
   module Executors
     autoload :ApplyChange, 'aquarium/executors/apply_change'
