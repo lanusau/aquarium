@@ -35,11 +35,32 @@ describe Aquarium::Change do
   end
   
   describe '#current_sql_collection' do
-    it 'Sets current SQL collection to either :apply or :rollback' do
-      @change.current_sql_collection = :apply
-      expect(@change.current_sql_collection).to eq(@change.apply_sql_collection)
-      @change.current_sql_collection = :rollback
-      expect(@change.current_sql_collection).to eq(@change.rollback_sql_collection)
+    context 'when valid collection name is passed' do
+      it 'sets current SQL collection to either :apply or :rollback' do
+        @change.current_sql_collection = :apply
+        expect(@change.current_sql_collection).to eq(@change.apply_sql_collection)
+        @change.current_sql_collection = :rollback
+        expect(@change.current_sql_collection).to eq(@change.rollback_sql_collection)
+      end
+    end
+    context 'when invalid collection name is passed' do
+      it 'raises an exception' do
+        @change.current_sql_collection = :invalid
+        expect {@change.current_sql_collection}.to raise_error
+      end
+    end
+  end
+
+  describe '#print_banner' do
+    context 'when option :interactive is set' do
+      it 'outputs to stdout' do
+        expect { @change.print_banner('rollback',{:interactive => true}) }.to output.to_stdout
+      end
+    end
+    context 'when option :interactive is not set' do
+      it 'does not output to stdout' do
+        expect { @change.print_banner('rollback',{}) }.to_not output.to_stdout
+      end
     end
   end
 end

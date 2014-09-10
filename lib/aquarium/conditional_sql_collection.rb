@@ -16,14 +16,10 @@ module Aquarium
     end
 
     # Return printable value of condition
-    def conditional_sql
-      sql_array = []
-      sql_array << <<-EOF "-- Executed if condition below equals #{@expected_result}"
-      #{@condition}
-      sql_array << "-- SQL"
-      EOF
-      sql_array.concat(@sql_collection)
-      sql_array << "-- End of conditional SQL"
+    def conditional_sql            
+      return [
+        "--##{@expected_result ? "if": "ifnot"} #{@condition}\n"
+      ].concat(@sql_collection)
 
     end
 
@@ -34,7 +30,7 @@ module Aquarium
 
       dbh = database.dbh
       begin
-      row = dbh.select_one(@condition)
+        row = dbh.select_one(@condition)
       rescue Exception => e
         raise "Error executing conditional SQL -> #{@condition}\n#{e.to_s}"
       end

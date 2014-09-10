@@ -3,6 +3,11 @@ module Aquarium
   class Tag
     @@registered_tags = { }
 
+    # Return registered tags
+    def self.registered_tags
+      @@registered_tags
+    end
+
     # Find subclass for particular tag
     def self.find_tag(tag,parameters,file_name,change_collection)
       klass = @@registered_tags[tag]

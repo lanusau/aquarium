@@ -15,6 +15,9 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency  'colored', '~> 1.2'
 
   gem.add_development_dependency 'rspec', '~> 3.0'
+  gem.add_development_dependency 'simplecov', '~> 0.9'
+  gem.add_development_dependency 'rake', '~> 10.3'
+  gem.add_development_dependency 'byebug'
 
   gem.executables = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   gem.files = `git ls-files`.split("\n")

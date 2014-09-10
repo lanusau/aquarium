@@ -9,6 +9,11 @@ module Aquarium
 
     @@registered_databases= []
 
+    # Return all registered databases
+    def self.registered_databases
+      @@registered_databases
+    end
+
     # Find database that can handle particular URL
     def self.database_for(options)
       url = options[:url]      
