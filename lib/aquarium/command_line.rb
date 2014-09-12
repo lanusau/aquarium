@@ -12,9 +12,12 @@ module Aquarium
 
   # This is a wrapper class to be used from command line
   class CommandLine
-    attr :options
+    attr :options, true
+    attr :command, true
+    attr :parameters, true
 
     # Create new command line object
+    # :nocov:
     def initialize(args)
       # Below is needed to shut up Oracle DBI driver
       ENV['NLS_LANG']='AMERICAN_AMERICA.US7ASCII'
@@ -24,11 +27,15 @@ module Aquarium
       puts e.to_s.red
       exit!
     end
+    # :nocov:
 
     # Query repository for the database instance data
     def query_repository
       raise "Can not open onfig file #{@options[:config]}" unless File.exists?(@options[:config]) and File.readable?(@options[:config])
-      config = YAML::load(File.open(@options[:config]))
+      config = {}
+      File.open(@options[:config]) do |f|
+        config = YAML::load(f)
+      end
       assert_not_null(config,'username')
       assert_not_null(config,'password')
       assert_not_null(config,'database')
@@ -55,9 +62,11 @@ module Aquarium
     end
 
     # Assert particular key (parameter) in the has is not null
+    # :nocov:
     def assert_not_null(config, key)
       raise "Please set parameter \"#{key}\" in config file" if config[key].nil?
     end
+    # :nocov:
 
     # Run specified command
     def run

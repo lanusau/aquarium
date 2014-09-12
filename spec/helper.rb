@@ -10,3 +10,16 @@ require_relative '../lib/aquarium/sql_collection'
 require_relative '../lib/aquarium/tag'
 require_relative '../lib/aquarium/parser'
 require_relative '../lib/aquarium/database'
+require_relative '../lib/aquarium/executor'
+require_relative '../lib/aquarium/command_line'
+
+
+def silence_stream(stream)
+  old_stream = stream.dup
+  stream.reopen('/dev/null')
+  stream.sync = true
+  yield
+ensure
+  stream.reopen(old_stream)
+  old_stream.close
+end

@@ -7,16 +7,14 @@ module Aquarium
 
     # Find executor for particular command
     def self.executor_for(command)
-
       klass = @@registered_executors[command]
       raise "Unknown command #{command}" if klass.nil?
       klass
-
     end
 
     # Subclasses will call this to register  that they can handle particular command
     def self.register_executor(command)
-      @@registered_executors[command] = self
+      @@registered_executors[command] = self      
     end
 
     # Return all registered executors
@@ -131,6 +129,7 @@ module Aquarium
     end
 
     # Get response, retrying until its valid
+    # :nocov:
     def get_response(message)
       response = ''
       loop do
@@ -140,6 +139,7 @@ module Aquarium
       end
       return response
     end
+    # :nocov:
 
   end
 
