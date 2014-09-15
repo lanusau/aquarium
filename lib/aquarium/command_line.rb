@@ -106,6 +106,9 @@ module Aquarium
         opts.on("-x", "--execute", "Execute SQL. Default is to just print SQL") do |config|
           @options[:execute] = true
         end
+        opts.on("-v", "--verbose", "Verbose. Print every SQL executed") do |config|
+          @options[:callback] = self
+        end
         opts.on("-h", "--help", "Show this message") do
           puts opts
           exit
@@ -130,6 +133,16 @@ module Aquarium
       puts $!.to_s
       puts optparse
       exit
+    end
+
+    # Executor callback methods
+    def start_sql(sql)
+      puts(sql)
+    end
+    def end_sql(status)
+      if status == :success
+        puts "OK".green
+      end
     end
 
   end

@@ -29,6 +29,11 @@ module Aquarium
       @change_collection = @parser.parse
       @options = options
       @parameters = parameters
+      if options[:callback] &&
+          options[:callback].respond_to?(:start_sql) &&
+          options[:callback].respond_to?(:end_sql)
+        @callback = options[:callback]
+      end
     end
 
     # Apply particular change, with re-try logic
@@ -120,8 +125,11 @@ module Aquarium
       sql_collection.each_with_index do |sql,index|
         next if index < start_with
         begin
+          @callback.start_sql(sql) if @callback
           @database.execute(sql)
+          @callback.end_sql(:success) if @callback
         rescue DBI::DatabaseError => e
+          @callback.end_sql(:error) if @callback
           raise Aquarium::ExecutionException.new(sql,index), e.message
         end
 
