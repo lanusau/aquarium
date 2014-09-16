@@ -5,6 +5,8 @@ module Aquarium
   class Executor
     @@registered_executors = { }
 
+    attr :callback, true
+
     # Find executor for particular command
     def self.executor_for(command)
       klass = @@registered_executors[command]
