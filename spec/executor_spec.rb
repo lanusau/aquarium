@@ -26,7 +26,7 @@ describe Aquarium::Executor do
       allow(File).to receive(:dirname) {''}
       allow(File).to receive(:open).and_yield(file)
       parser  = Aquarium::Parser.new('file')
-      expect(Aquarium::Executor.new(nil, parser,[],[])).to be_instance_of Aquarium::Executor
+      expect(Aquarium::Executor.new(nil, parser,[],{})).to be_instance_of Aquarium::Executor
     end
   end
   describe '#apply_change' do
@@ -63,6 +63,26 @@ describe Aquarium::Executor do
               with(change.apply_sql_collection.to_a(database),0) {raise Aquarium::ExecutionException.new('sql',1), 'error'}
             expect(executor).to receive(:execute_collection).with(change.apply_sql_collection.to_a(database),1)
             expect(executor).to receive(:get_response) {'R'}
+            silence_stream(STDOUT) do
+              expect {executor.apply_change(change)}.not_to raise_error
+            end
+          end
+        end
+        context 'when user requests to skip' do
+          it 'skips to next SQL' do
+            parser  = Aquarium::Parser.new('file_name')
+            change_collection = Aquarium::ChangeCollection.new('file_name')
+            change_collection.add_change(Aquarium::Change.new('test:1','test_file.sql','description'))
+            change_collection.add_change(Aquarium::Change.new('test:2','test_file.sql','description'))
+            expect(parser).to receive(:parse) {change_collection}
+            change = change_collection.find('test:1')
+            database = nil
+            parameters = nil
+            executor = Aquarium::Executor.new(database,parser,parameters,options)
+            expect(executor).to receive(:execute_collection).
+              with(change.apply_sql_collection.to_a(database),0) {raise Aquarium::ExecutionException.new('sql',1), 'error'}
+            expect(executor).to receive(:execute_collection).with(change.apply_sql_collection.to_a(database),2)
+            expect(executor).to receive(:get_response) {'S'}
             silence_stream(STDOUT) do
               expect {executor.apply_change(change)}.not_to raise_error
             end
@@ -267,7 +287,7 @@ describe Aquarium::Executor do
       expect(parser).to receive(:parse) {change_collection}
       database = double()
       expect(database).to receive(:execute).twice
-      executor = Aquarium::Executor.new(database,parser,nil,nil)
+      executor = Aquarium::Executor.new(database,parser,[],{})
       executor.execute_collection(sqls,1)
     end
     it 'raises an error if databases raises error for any of the SQLs' do
@@ -277,8 +297,24 @@ describe Aquarium::Executor do
       expect(parser).to receive(:parse) {change_collection}
       database = double()
       expect(database).to receive(:execute) {raise DBI::DatabaseError.new 'error'}
-      executor = Aquarium::Executor.new(database,parser,nil,nil)
+      executor = Aquarium::Executor.new(database,parser,[],{})
       expect {executor.execute_collection(sqls,1)}.to raise_error
+    end
+    context 'when callback object is set in options' do
+      it 'calls callback object during execution' do
+        sqls = ["sql1","sql2"]
+        parser  = Aquarium::Parser.new('file_name')
+        change_collection = Aquarium::ChangeCollection.new('file_name')
+        expect(parser).to receive(:parse) {change_collection}
+        database = double()
+        expect(database).to receive(:execute).twice
+        callback = double()
+        expect(callback).to receive(:start_sql).twice
+        expect(callback).to receive(:end_sql).twice
+        options = {:callback => callback}
+        executor = Aquarium::Executor.new(database,parser,[],options)
+        executor.execute_collection(sqls,0)
+      end
     end
   end
 end

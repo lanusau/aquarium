@@ -11,6 +11,7 @@ describe Aquarium::CommandLine do
           '-d','database',
           '-c','config',
           '-x',
+          '-v',
           'apply_change','test:1'
         ]
         Aquarium::CommandLine.class_eval {def initialize ; end}
@@ -20,6 +21,7 @@ describe Aquarium::CommandLine do
         expect(cmd.options[:instance_name]).to eq 'database'
         expect(cmd.options[:config]).to eq 'config'
         expect(cmd.options[:execute]).to eq true
+        expect(cmd.options[:callback]).to eq cmd
         expect(cmd.command).to eq :apply_change
         expect(cmd.parameters[0]).to eq 'test:1'
       end
@@ -147,7 +149,7 @@ EOF
       it 'runs #execute method on executor' do
         Aquarium::CommandLine.class_eval {def initialize ; end}
         cmd = Aquarium::CommandLine.new
-        cmd.options = {:file=>'file',:url=>'dbi:Mysql:blah',:execute=>true}
+        cmd.options = {:file=>'file',:url=>'dbi:Mysql:blah',:execute=>true,:callback => cmd}
         cmd.command = :apply_change
         cmd.parameters = ['test:1']
         file = StringIO.new "--#change test:1 Test change number 1\ncreate table test1\n;"
@@ -165,6 +167,7 @@ EOF
         expect(Aquarium::Executor).to receive(:executor_for).with(cmd.command) {TestExecutor}
         expect(cmd.run).to eq('execute')
       end
+      context 'when verbose option is used'
     end
     context 'when exception is raised inside executor' do
       it 'print error to the stdout' do

@@ -36,11 +36,25 @@ module Aquarium
       end
     end
 
-    # Apply particular change, with re-try logic
+    # Apply change
     def apply_change(change)
-      change.print_banner('APPLY',@options)
+      do_change_with_retry(:apply,change)
+    end
 
-      sql_collection = change.apply_sql_collection.to_a(@database)
+    # Rollback change
+    def rollback_change(change)
+      do_change_with_retry(:rollback,change)
+    end
+
+    # Apply/rollback particular change, with re-try logic
+    def do_change_with_retry(operation,change)
+      banner = (operation == :apply ? 'APPLY' : 'ROLLBACK')
+      change.print_banner(banner,@options)
+
+      sql_collection =  case operation
+        when :apply    then change.apply_sql_collection.to_a(@database)
+        when :rollback then change.rollback_sql_collection.to_a(@database)
+      end
       start_with = 0
       begin
         execute_collection(sql_collection,start_with)
@@ -52,11 +66,15 @@ module Aquarium
           puts e.sql.red
           puts "-----------------------------".red
           begin
-            response = get_response("[R]etry,[A]bort or [P]arse file and retry ?")
+            response = get_response("[R]etry,[A]bort,[S]kip or [P]arse file and retry ?")
             case response
             when 'R'
               puts('Retrying ...')
               start_with = e.index
+              retry
+            when 'S'
+              puts('Skipping last SQL')
+              start_with = e.index + 1
               retry
             when 'A'
               raise 'Aborted'
@@ -65,7 +83,10 @@ module Aquarium
               # Re-parse file and retry again at the same index
               @change_collection = @parser.parse
               change = @change_collection.find!(change.code)
-              sql_collection = change.apply_sql_collection.to_a(@database)
+              sql_collection =  case operation
+                when :apply    then change.apply_sql_collection.to_a(@database)
+                when :rollback then change.rollback_sql_collection.to_a(@database)
+              end
               start_with = e.index
               puts('Retrying ...')
               retry
@@ -75,51 +96,9 @@ module Aquarium
           raise
         end
       end
-      puts 'Applied successfully'.green if @options[:interactive]
+      puts "#{banner} operation successful".green if @options[:interactive]
     end
-
-    # Rollback particular change, with re-try logic
-    def rollback_change(change)
-      change.print_banner('ROLLBACK',@options)
-
-      sql_collection = change.rollback_sql_collection.to_a(@database)
-      start_with = 0
-      begin
-        execute_collection(sql_collection,start_with)
-      rescue Aquarium::ExecutionException => e
-        if @options[:interactive]
-          puts "Error: #{e.message}".red
-          puts "When executing:".red
-          puts "-----------------------------".red
-          puts e.sql.red
-          puts "-----------------------------".red
-          begin
-            response = get_response("[R]etry,[A]bort or [P]arse file again and retry ?")
-            case response
-            when 'R'
-              puts('Retrying ...')
-              start_with = e.index
-              retry
-            when 'A'
-              raise 'Aborted'
-            when 'P'
-              puts('Reparsing file ...')
-              # Re-parse file and retry again at the same index
-              @change_collection = @parser.parse
-              change = @change_collection.find!(change.code)
-              sql_collection = change.rollback_sql_collection.to_a(@database)
-              start_with = e.index
-              puts('Retrying ...')
-              retry
-            end
-          end
-        else
-          raise
-        end
-      end
-      puts 'Rolled back successfully'.green if @options[:interactive]
-    end
-
+    
     # Execute particular SQL collection
     def execute_collection(sql_collection,start_with)
       sql_collection.each_with_index do |sql,index|
@@ -143,7 +122,7 @@ module Aquarium
       loop do
         puts(message)
         response = gets.chop.upcase
-        break if response =~ /^[RAP]{1}/
+        break if response =~ /^[RAPS]{1}/
       end
       return response
     end

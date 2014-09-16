@@ -136,6 +136,7 @@ module Aquarium
     end
 
     # Executor callback methods
+    # :nocov:
     def start_sql(sql)
       puts(sql)
     end
@@ -144,6 +145,7 @@ module Aquarium
         puts "OK".green
       end
     end
+    # :nocov:
 
   end
 end

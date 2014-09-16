@@ -22,7 +22,7 @@ describe Aquarium::Executors::RollbackChange do
       it 'raises an exception' do
         database = nil
         parameters = nil
-        options = nil
+        options = {}
         expect(@parser).to receive(:parse) {@change_collection}
         expect {Aquarium::Executors::RollbackChange.new(database, @parser,parameters,options)}.to raise_error
       end
@@ -31,7 +31,7 @@ describe Aquarium::Executors::RollbackChange do
       it 'raises an exception' do
         database = nil
         parameters = ["test:3"]
-        options = nil
+        options = {}
         expect(@parser).to receive(:parse) {@change_collection}
         expect {Aquarium::Executors::RollbackChange.new(database, @parser,parameters,options)}.to raise_error
       end
@@ -40,7 +40,7 @@ describe Aquarium::Executors::RollbackChange do
       it 'creates new object instance' do
         database = nil
         parameters = ["test:1"]
-        options = nil
+        options = {}
         expect(@parser).to receive(:parse) {@change_collection}
         expect(Aquarium::Executors::RollbackChange.new(database, @parser,parameters,options)).to be_instance_of(Aquarium::Executors::RollbackChange)
       end
