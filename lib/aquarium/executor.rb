@@ -114,7 +114,7 @@ module Aquarium
           @callback.start_sql(sql) if @callback
           @database.execute(sql)
           @callback.end_sql(:success) if @callback
-        rescue DBI::DatabaseError => e
+        rescue Exception => e
           @callback.end_sql(:error) if @callback
           raise Aquarium::ExecutionException.new(sql,index), e.message
         end
