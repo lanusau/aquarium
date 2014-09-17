@@ -31,6 +31,11 @@ module Aquarium
       @@registered_databases << self
     end
 
+    # disconnect
+    def disconnect
+      @dbh.disconnect
+    end
+
     # Execute specified SQL
     def execute(sql)      
         @dbh.do(sql)

@@ -32,6 +32,16 @@ describe Aquarium::Database do
       end
     end
   end
+  describe '#disconnect' do
+    it 'disconnects database handle' do
+      dbh = double()
+      expect(dbh).to receive(:disconnect)
+      allow(DBI).to receive(:connect) {dbh}
+      options = {:url => 'dbi:Mysql:blah'}
+      database = Aquarium::Database.database_for(options)
+      database.disconnect
+    end
+  end
   describe '#execute' do
     it 'executes specified SQL' do
       sql = "select * from table"

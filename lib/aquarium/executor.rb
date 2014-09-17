@@ -38,6 +38,11 @@ module Aquarium
       end
     end
 
+    # Close database connection
+    def finish
+      @database.disconnect if @database
+    end
+
     # Apply change
     def apply_change(change)
       do_change_with_retry(:apply,change)

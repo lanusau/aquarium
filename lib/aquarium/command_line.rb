@@ -80,9 +80,11 @@ module Aquarium
       else        
         executor.print
       end
+      
     rescue Exception => e      
       puts e.to_s.red
-      #e.backtrace.each{|line| puts line}
+    ensure
+      executor.finish if executor
     end
 
     # Process options
