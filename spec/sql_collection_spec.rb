@@ -31,11 +31,9 @@ describe Aquarium::SqlCollection do
       csc << "SQL3"
       sc << csc
 
-      # Fake database call to execute condition SQL
-      database = instance_double('Aquarium::Database')
-      dbh = instance_double('DBI::DatabaseHandle')
-      allow(dbh).to receive(:select_one) {[1]}
-      allow(database).to receive(:dbh) {dbh}
+      database = instance_double('Aquarium::MySQLDatabase')
+      allow(database).to receive(:condition_met?) {true}
+
       expect(sc.to_a(database).size).to eql(3)
     end
   end

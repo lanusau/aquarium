@@ -1,5 +1,5 @@
 require 'helper'
-require 'dbi'
+require 'oci8'
 
 describe Aquarium::Executors::ApplyChange do
   before do
@@ -51,7 +51,7 @@ describe Aquarium::Executors::ApplyChange do
       it 'raises an error' do
         options = {:interactive => false}
         parameters = ['test:1']
-        database = instance_double('Aquarium::Database')        
+        database = instance_double('Aquarium::MySQLDatabase')
         expect(database).to receive(:change_registered?).with(@change1) {true}
         expect(@parser).to receive(:parse) {@change_collection}
         executor = Aquarium::Executors::ApplyChange.new(database, @parser,parameters,options)
@@ -62,7 +62,7 @@ describe Aquarium::Executors::ApplyChange do
       it 'executes the change' do
         options = {:interactive => false}
         parameters = ['test:1']
-        database = instance_double('Aquarium::Database')
+        database = instance_double('Aquarium::MySQLDatabase')
         expect(database).to receive(:control_table_missing?) {false}
         expect(database).to receive(:change_registered?).with(@change1) {false}
         expect(@parser).to receive(:parse) {@change_collection}
@@ -77,7 +77,7 @@ describe Aquarium::Executors::ApplyChange do
     it 'prints DDL that would be executed' do
       options = {:interactive => false}
       parameters = ['test:1']
-      expect(DBI).to receive(:connect)
+      expect(OCI8).to receive(:new)
       database = Aquarium::OracleDatabase.new(options)
       expect(database).to receive(:control_table_missing?) {true}
       expect(database).to receive(:change_registered?).with(@change1) {false}

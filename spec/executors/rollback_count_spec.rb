@@ -1,5 +1,5 @@
 require 'helper'
-require 'dbi'
+require 'oci8'
 
 describe Aquarium::Executors::RollbackCount do
   before do
@@ -51,7 +51,7 @@ describe Aquarium::Executors::RollbackCount do
       it 'does nothing' do
         options = {:interactive => false}
         parameters = [1]
-        database = instance_double('Aquarium::Database')
+        database = instance_double('Aquarium::MySQLDatabase')
         expect(database).to receive(:control_table_missing?) {true}
         expect(@parser).to receive(:parse) {@change_collection}
         executor = Aquarium::Executors::RollbackCount.new(database, @parser,parameters,options)
@@ -63,7 +63,7 @@ describe Aquarium::Executors::RollbackCount do
       it 'raises error' do
         options = {:interactive => false}
         parameters = [1]
-        database = instance_double('Aquarium::Database')
+        database = instance_double('Aquarium::MySQLDatabase')
         expect(database).to receive(:control_table_missing?) {false}
         expect(database).to receive(:changes_in_database) { [Aquarium::Change.new('test:3','test_file.sql','description')] }
         expect(@parser).to receive(:parse) {@change_collection}
@@ -75,7 +75,7 @@ describe Aquarium::Executors::RollbackCount do
       it 'rolls back changes' do
         options = {:interactive => false}
         parameters = [2]
-        database = instance_double('Aquarium::Database')
+        database = instance_double('Aquarium::MySQLDatabase')
         expect(database).to receive(:control_table_missing?) {false}
         db_change1 = @change1.dup
         db_change1.id = 1
@@ -100,7 +100,7 @@ describe Aquarium::Executors::RollbackCount do
       it 'does nothing' do
         options = {:interactive => true}
         parameters = [1]
-        database = instance_double('Aquarium::Database')
+        database = instance_double('Aquarium::MySQLDatabase')
         expect(database).to receive(:control_table_missing?) {true}
         expect(@parser).to receive(:parse) {@change_collection}
         executor = Aquarium::Executors::RollbackCount.new(database, @parser,parameters,options)
@@ -111,7 +111,7 @@ describe Aquarium::Executors::RollbackCount do
       it 'raises error' do
         options = {:interactive => false}
         parameters = [1]
-        database = instance_double('Aquarium::Database')
+        database = instance_double('Aquarium::MySQLDatabase')
         expect(database).to receive(:control_table_missing?) {false}
         expect(database).to receive(:changes_in_database) { [Aquarium::Change.new('test:3','test_file.sql','description')] }
         expect(@parser).to receive(:parse) {@change_collection}
@@ -123,7 +123,7 @@ describe Aquarium::Executors::RollbackCount do
       it 'prints roll back DDL' do
         options = {:interactive => false}
         parameters = [2]
-        expect(DBI).to receive(:connect)
+        expect(OCI8).to receive(:new)
         database = Aquarium::OracleDatabase.new(options)
         expect(database).to receive(:control_table_missing?) {false}
         db_change1 = @change1.dup

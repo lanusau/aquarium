@@ -1,12 +1,13 @@
 require 'optparse'
 require 'yaml'
-require 'dbi'
+require 'mysql2'
 require 'encryptor'
 require 'base64'
 require 'colored'
 require 'aquarium/database'
 require 'aquarium/parser'
 require 'aquarium/executor'
+require 'byebug'
 
 module Aquarium
 
@@ -40,15 +41,24 @@ module Aquarium
       assert_not_null(config,'password')
       assert_not_null(config,'database')
       assert_not_null(config,'host')
-      assert_not_null(config,'secret')
-      url = "dbi:Mysql:database=#{config['database']};host=#{config['host']};port=3306"      
-      DBI.connect(url, config['username'], config['password']) do |dbh|
-        row = dbh.select_one("select url,username,salt,password from aqu_instance where name = '#{@options[:instance_name]}'")
-        raise "Did not find database instance \"#{@options[:instance_name]}\" in repository" if row.nil?
-        @options[:url] = row[0]
-        @options[:username] = row[1]
-        @options[:password] = decrypt(row[2],row[3],config['secret'])
-      end
+      assert_not_null(config,'secret')      
+      client = Mysql2::Client.new(
+        :host => config[:host],
+        :username => config[:username],
+        :password => config[:password],
+        :port => config[:port] || 3306,
+        :database => config[:database])
+
+      row = client.query("select adapter,host,port,database,username,salt,password from aqu_instance where name = '#{@options[:instance_name]}'",
+          :symbolize_keys => true).first
+      raise "Did not find database instance \"#{@options[:instance_name]}\" in repository" if row.nil?
+      @options[:adapter] = row[:adapter]
+      @options[:host] = row[:host]
+      @options[:port] = row[:port]
+      @options[:database] = row[:database]
+      @options[:username] = row[:username]
+      @options[:password] = decrypt(row[:salt],row[:password],config['secret'])
+      
     end
 
     # Decrypt password using salt and secret
@@ -69,7 +79,7 @@ module Aquarium
     # :nocov:
 
     # Run specified command
-    def run
+    def run      
       @options[:interactive] = true
       parser = Aquarium::Parser.new(@options[:file])      
       database = Aquarium::Database.database_for(@options)

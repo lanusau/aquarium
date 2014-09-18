@@ -1,19 +1,21 @@
-require 'dbi'
+require 'oci8'
 require 'aquarium/database'
 require 'aquarium/change'
 
 module Aquarium
   # Oracle database
-  class OracleDatabase < Aquarium::Database    
+  class OracleDatabase < Aquarium::Database
+    attr :client
+
     register_database
 
-    def self.service(url) #:nodoc:
-      url =~ /^dbi:OCI8/ ? true : false
+    def self.service(adapter) #:nodoc:
+      adapter.downcase == 'oracle'
     end
 
     # Create new object
     def initialize(options)
-      @dbh = DBI.connect(options[:url], options[:username], options[:password])
+      @client = OCI8.new(options[:username], options[:password], "//#{options[:host]}:#{options[:port]}/#{options[:database]}")
     end
 
     # SQL list to create control table
@@ -79,6 +81,54 @@ END
        and table_name = 'AQU_CHANGE'
       END
       return sql
+    end
+
+    # Disconnect
+    def disconnect
+      @client.logoff
+    end
+
+    # Execute specified SQL
+    def execute(sql)
+      @client.exec(sql)
+    end
+
+    # Commit
+    def commit
+      @client.commit
+    end
+
+    # Return list of changes in database
+    def get_changes_in_database
+      @changes_in_database = []
+      cursor = @client.exec('select code,file_name,description,change_id,cmr_number,user_update from aqu_change order by change_id asc')
+      while row = cursor.fetch_hash
+        @changes_in_database << Aquarium::Change.new(
+              row["CODE"],row["FILE_NAME"],row["DESCRIPTION"],row["CHANGE_ID"],row["CMR_NUMBER"],row["USER_UPDATE"])
+      end
+      cursor.close
+      @changes_in_database
+    end
+
+    # Return whether control table is missing in the database
+    def control_table_missing?
+      return @control_table_missing unless @control_table_missing.nil?
+      cursor = @client.exec(control_table_missing_sql)
+      row = cursor.fetch
+      @control_table_missing = (row[0] == 0)
+      cursor.close
+      return @control_table_missing
+    end
+
+    # Check if particular SQL condition is met
+    def condition_met?(condition, expected_result)
+      begin
+        row = @client.exec(condition)
+      rescue Exception => e
+        raise "Error executing conditional SQL -> #{condition}\n#{e.to_s}"
+      end
+      result = (!row[0].nil? && row[0] > 0)
+      return result  == expected_result
     end
 
   end

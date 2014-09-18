@@ -1,5 +1,5 @@
 require 'helper'
-require 'dbi'
+require 'oci8'
 
 describe Aquarium::Executors::ApplyAll do
   before do
@@ -23,7 +23,7 @@ describe Aquarium::Executors::ApplyAll do
       it 'creates control table and executes all changes' do
         options = {:interactive => false}
         parameters = nil
-        database = instance_double('Aquarium::Database')
+        database = instance_double('Aquarium::MySQLDatabase')
         expect(database).to receive(:control_table_missing?).twice {true}
         expect(database).to receive(:create_control_table).with(options)
         expect(@parser).to receive(:parse) {@change_collection}
@@ -39,7 +39,7 @@ describe Aquarium::Executors::ApplyAll do
       it 'executes only missing changes' do
         options = {:interactive => false}
         parameters = nil
-        database = instance_double('Aquarium::Database')
+        database = instance_double('Aquarium::MySQLDatabase')
         expect(database).to receive(:control_table_missing?).twice {false}     
         expect(database).to receive(:change_registered?).with(@change1) {true}
         expect(database).to receive(:change_registered?).with(@change2) {false}
@@ -57,7 +57,7 @@ describe Aquarium::Executors::ApplyAll do
     it 'prints DDL that would be executed' do
       options = {:interactive => true}
       parameters = nil
-      expect(DBI).to receive(:connect)
+      expect(OCI8).to receive(:new)
       database = Aquarium::OracleDatabase.new(options)
       expect(database).to receive(:control_table_missing?).twice {true}
       expect(@parser).to receive(:parse) {@change_collection}

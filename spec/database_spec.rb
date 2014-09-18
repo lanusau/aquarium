@@ -1,5 +1,5 @@
 require 'helper'
-require 'dbi'
+require 'mysql2'
 
 describe Aquarium::Database do
   describe '#register_database' do
@@ -11,84 +11,63 @@ describe Aquarium::Database do
     end
   end
   describe '#database_for' do
-    context 'when valid URL is passed' do
-      it 'returns class that handles database specified by the URL' do
+    context 'when valid adapter is passed' do
+      it 'returns class that handles database specified by the adapter' do
         class TestDatabase < Aquarium::Database
           register_database
-          def self.service(url)
-            url =~ /^test:/ ? true : false
+          def self.service(adapter)
+            adapter.downcase == 'test'
           end
           def initialize(options)
           end
         end
-        options = {:url => 'test:something'}
+        options = {:adapter => 'test'}
         expect(Aquarium::Database.database_for(options)).to be_instance_of(TestDatabase)
       end
     end
-    context 'when invalid URL is passed' do
+    context 'when invalid adapter is passed' do
       it 'raises an error' do
-        options = {:url => 'not:existing'}
+        options = {:adapter => 'not_existing'}
         expect {Aquarium::Database.database_for(options) }.to raise_error
       end
     end
   end
-  describe '#disconnect' do
-    it 'disconnects database handle' do
-      dbh = double()
-      expect(dbh).to receive(:disconnect)
-      allow(DBI).to receive(:connect) {dbh}
-      options = {:url => 'dbi:Mysql:blah'}
-      database = Aquarium::Database.database_for(options)
-      database.disconnect
-    end
-  end
-  describe '#execute' do
-    it 'executes specified SQL' do
-      sql = "select * from table"
-      dbh = double()
-      expect(dbh).to receive(:do).with(sql)
-      allow(DBI).to receive(:connect) {dbh}
-      options = {:url => 'dbi:Mysql:blah'}
-      database = Aquarium::Database.database_for(options)
-      database.execute(sql)
-    end
-  end
+
   describe '#register_change' do
     it 'registers change into the database' do
-      dbh = double()
-      allow(DBI).to receive(:connect) {dbh}
-      options = {:url => 'dbi:Mysql:blah'}
+      client = double()
+      expect(Mysql2::Client).to receive(:new) {client}
+      options = {:adapter => 'mysql'}
       database = Aquarium::Database.database_for(options)
       change = Aquarium::Change.new('test:1','test_file.sql','description')
-      expect(dbh).to receive(:do).with(database.register_change_sql(change))
-      expect(dbh).to receive(:commit)
+      expect(client).to receive(:query).with(database.register_change_sql(change))
+      expect(client).to receive(:query).with('commit')
       database.register_change(change)
     end
   end
   describe '#unregister_change' do
     context 'when change is registered in database' do
       it 'executes SQL to delete registrations from the database' do
-        dbh = double()
-        allow(DBI).to receive(:connect) {dbh}
-        options = {:url => 'dbi:Mysql:blah'}
+        client = double()
+        expect(Mysql2::Client).to receive(:new) {client}
+        options = {:adapter => 'mysql'}
         database = Aquarium::Database.database_for(options)
         change = Aquarium::Change.new('test:1','test_file.sql','description')
-        expect(dbh).to receive(:do).with(database.unregister_change_sql(change))
-        expect(dbh).to receive(:commit)
+        expect(client).to receive(:query).with(database.unregister_change_sql(change))
+        expect(client).to receive(:query).with('commit')
         allow(database).to receive(:change_registered?).with(change) {true}
         database.unregister_change(change)
       end
     end
     context 'when change is not registered in database' do
       it 'does nothing' do
-        dbh = double()
-        allow(DBI).to receive(:connect) {dbh}
-        options = {:url => 'dbi:Mysql:blah'}
+        client = double()
+        expect(Mysql2::Client).to receive(:new) {client}
+        options = {:adapter => 'mysql'}
         database = Aquarium::Database.database_for(options)
         change = Aquarium::Change.new('test:1','test_file.sql','description')
         allow(database).to receive(:change_registered?).with(change) {false}
-        expect(dbh).not_to receive(:do)
-        expect(dbh).not_to receive(:commit)
+        expect(client).not_to receive(:query)
         database.unregister_change(change)
       end
     end
@@ -96,13 +75,16 @@ describe Aquarium::Database do
   describe '#changes_in_database' do
     context 'when control table is present' do
       it 'returns list of changes in the dabatase' do
-        dbh = double()
-        allow(DBI).to receive(:connect) {dbh}
-        options = {:url => 'dbi:Mysql:blah'}
+        client = double()
+        expect(Mysql2::Client).to receive(:new) {client}
+        options = {:adapter => 'mysql'}
         database = Aquarium::Database.database_for(options)
         allow(database).to receive(:control_table_missing?) {false}
-        row = ['test:1','test_file.sql','description',1,'123','user_update']
-        allow(dbh).to receive(:select_all).and_yield(row)
+        row = {
+          :code=>'test:1',:file_name=>'test_file.sql',
+          :description=>'description',:change_id=>1,:cmr_number=>'123',
+          :user_update=>'user_update'}
+        allow(client).to receive(:query).and_yield(row)
         @changes = database.changes_in_database
         expect(@changes.size).to eql(1)
         expect(@changes[0]).to be_instance_of(Aquarium::Change)
@@ -111,9 +93,9 @@ describe Aquarium::Database do
     end
     context 'when control table is not present' do
       it 'returns empty list' do
-        dbh = double()
-        allow(DBI).to receive(:connect) {dbh}
-        options = {:url => 'dbi:Mysql:blah'}
+        client = double()
+        expect(Mysql2::Client).to receive(:new) {client}
+        options = {:adapter => 'mysql'}
         database = Aquarium::Database.database_for(options)
         allow(database).to receive(:control_table_missing?) {true}
         @changes = database.changes_in_database
@@ -124,9 +106,9 @@ describe Aquarium::Database do
   describe '#change_registered?' do
     context 'when change is registered in database' do
       it 'returns full information for the change' do
-        dbh = double()
-        allow(DBI).to receive(:connect) {dbh}
-        options = {:url => 'dbi:Mysql:blah'}
+        client = double()
+        expect(Mysql2::Client).to receive(:new) {client}
+        options = {:adapter => 'mysql'}
         database = Aquarium::Database.database_for(options)
         complete_change = Aquarium::Change.new('test:1','test_file.sql','description',1,'123','user_update')
         incomplete_change = Aquarium::Change.new('test:1','test_file.sql','description')
@@ -139,9 +121,9 @@ describe Aquarium::Database do
     end
     context 'when change is not registered in database' do
       it 'returns nil' do
-        dbh = double()
-        allow(DBI).to receive(:connect) {dbh}
-        options = {:url => 'dbi:Mysql:blah'}
+        client = double()
+        expect(Mysql2::Client).to receive(:new) {client}
+        options = {:adapter => 'mysql'}
         database = Aquarium::Database.database_for(options)
         complete_change = Aquarium::Change.new('test:1','test_file.sql','description',1,'123','user_update')
         new_change = Aquarium::Change.new('test:2','test_file.sql','description')
@@ -150,37 +132,28 @@ describe Aquarium::Database do
       end
     end
   end
-  describe '#control_table_missing?' do
-    it 'returns whether control table is missing in the database' do
-      dbh = double()
-      allow(DBI).to receive(:connect) {dbh}
-      options = {:url => 'dbi:Mysql:blah'}
-      database = Aquarium::Database.database_for(options)
-      expect(dbh).to receive(:select_one).with(database.control_table_missing_sql) {[0]}
-      expect(database.control_table_missing?).to eql(true)
-    end
-  end
+
   describe '#create_control_table' do
     context 'when interactive option is not specified' do
       it 'creates control table in the database' do
-        dbh = double()
-        allow(DBI).to receive(:connect) {dbh}
-        options = {:url => 'dbi:Mysql:blah'}
+        client = double()
+        expect(Mysql2::Client).to receive(:new) {client}
+        options = {:adapter => 'mysql'}
         database = Aquarium::Database.database_for(options)
         database.control_table_sqls.each do |sql|
-          expect(dbh).to receive(:do).with(sql)
+          expect(database).to receive(:execute).with(sql)
         end
         database.create_control_table({})
       end
     end
     context 'when interactive option is specified' do
       it 'creates control table and prints to the STDOUT' do
-        dbh = double()
-        allow(DBI).to receive(:connect) {dbh}
-        options = {:url => 'dbi:Mysql:blah'}
+        client = double()
+        expect(Mysql2::Client).to receive(:new) {client}
+        options = {:adapter => 'mysql',:interactive => true}
         database = Aquarium::Database.database_for(options)
         database.control_table_sqls.each do |sql|
-          expect(dbh).to receive(:do).with(sql)
+          expect(database).to receive(:execute).with(sql)
         end        
         expect { database.create_control_table({:interactive => true}) }.to output.to_stdout
       end

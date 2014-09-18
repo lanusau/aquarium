@@ -1,3 +1,5 @@
+ENV['NLS_LANG']='AMERICAN_AMERICA.US7ASCII'
+
 require 'simplecov'
 SimpleCov.start do
   add_filter "spec/"

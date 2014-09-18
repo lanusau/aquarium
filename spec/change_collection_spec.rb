@@ -89,7 +89,7 @@ describe Aquarium::ChangeCollection do
   describe '#pending_changes' do
     context 'when control table does not exist in database' do
       it 'returns all changes' do
-        database = instance_double('Aquarium::Database')
+        database = instance_double('Aquarium::MySQLDatabase')
         allow(database).to receive(:control_table_missing?) {true}
         @change_collection.add_change(@change)
         pending_changes = @change_collection.pending_changes(database)
@@ -99,7 +99,7 @@ describe Aquarium::ChangeCollection do
     end
     context 'when control table exists and has some changes registered' do
       it 'returns changes not applied to the database' do
-        database = instance_double('Aquarium::Database')
+        database = instance_double('Aquarium::MySQLDatabase')
         allow(database).to receive(:control_table_missing?) {false}
         allow(database).to receive(:change_registered?) do |change|
           change.code == 'test:1' ? true : false

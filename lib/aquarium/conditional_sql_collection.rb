@@ -1,4 +1,5 @@
 require 'aquarium/sql_collection'
+
 module Aquarium
 
   # SQL collection that depends on specified condition
@@ -27,19 +28,8 @@ module Aquarium
     def to_a(database)
 
       return conditional_sql if database.nil?
+      database.condition_met?(@condition,@expected_result) ? @sql_collection : []
 
-      dbh = database.dbh
-      begin
-        row = dbh.select_one(@condition)
-      rescue Exception => e
-        raise "Error executing conditional SQL -> #{@condition}\n#{e.to_s}"
-      end
-      result = (!row[0].nil? && row[0] > 0)
-      if result  == @expected_result
-        @sql_collection
-      else
-        return []
-      end
     end
   end
 end

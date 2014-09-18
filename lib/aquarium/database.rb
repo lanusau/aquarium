@@ -1,11 +1,7 @@
-require 'dbi'
-
-
 module Aquarium
   # Abstract database class, with subclasses Oracle or Mysql implementing
   # actual specifics of accessing database
   class Database
-    attr :dbh
 
     @@registered_databases= []
 
@@ -16,13 +12,14 @@ module Aquarium
 
     # Find database that can handle particular URL
     def self.database_for(options)
-      url = options[:url]      
+      raise "Null adapter passed" if options[:adapter].nil?
+      adapter = options[:adapter]
 
       @@registered_databases.each do |database|
-        return database.new(options) if database.service(url)
+        return database.new(options) if database.service(adapter)
       end
       
-      raise "Unknow database driver for URl #{url}"
+      raise "Unknow database adapter: #{adapter}"
       
     end
 
@@ -31,27 +28,17 @@ module Aquarium
       @@registered_databases << self
     end
 
-    # disconnect
-    def disconnect
-      @dbh.disconnect
-    end
-
-    # Execute specified SQL
-    def execute(sql)      
-        @dbh.do(sql)
-    end
-
     # Register change
     def register_change(change)
-      @dbh.do(register_change_sql(change))
-      @dbh.commit
+      execute(register_change_sql(change))
+      commit
     end
 
     # Unregister change (rollback)
     def unregister_change(change)
       return unless change_registered?(change)
-      @dbh.do(unregister_change_sql(change))
-      @dbh.commit
+      execute(unregister_change_sql(change))
+      commit
       
     end
 
@@ -60,13 +47,8 @@ module Aquarium
       return [] if control_table_missing?
       
       # Cache all changes on first call
-      if @changes_in_database.nil?
-        @changes_in_database = []
-        @dbh.select_all('select code,file_name,description,change_id,cmr_number,user_update from aqu_change order by change_id asc') do | row |
-            @changes_in_database << Aquarium::Change.new(row[0],row[1],row[2],row[3],row[4],row[5])
-        end
-      end
-      @changes_in_database
+      @changes_in_database ||= get_changes_in_database
+
     end
 
     # Return whether particular change is registered in this database
@@ -77,14 +59,6 @@ module Aquarium
       # Also fill in ID attribute which is in database table only
       change.id = database_change.id
       return database_change
-    end
-
-    # Return whether control table is missing in the database
-    def control_table_missing?
-      return @control_table_missing unless @control_table_missing.nil?
-      row = @dbh.select_one(control_table_missing_sql)
-      @control_table_missing = (row[0].to_i == 0)
-      return @control_table_missing
     end
 
     # Create control table

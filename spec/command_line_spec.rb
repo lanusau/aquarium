@@ -1,5 +1,5 @@
 require 'helper'
-require 'dbi'
+require 'mysql2'
 require 'colored'
 
 describe Aquarium::CommandLine do
@@ -90,11 +90,23 @@ host: host
 secret: m0nitr$this
 EOF
         expect(File).to receive(:open).and_yield(config_file)
-        dbh = double()
-        expect(dbh).to receive(:select_one) { ['dbi:blah','username','1025784991619346','Y9rEnBmdSsiC6XHAUz9csg=='] }
-        expect(DBI).to receive(:connect).and_yield(dbh)
+        client = double()
+        expect(client).to receive(:query) {
+          [{:adapter => 'mysql',
+           :host => 'test.host.com',
+           :port => 3306,
+           :database => 'test',
+           :username => 'username',
+           :salt => '1025784991619346',
+           :password => 'Y9rEnBmdSsiC6XHAUz9csg=='
+          }]
+        }
+        expect(Mysql2::Client).to receive(:new) {client}        
         cmd.query_repository
-        expect(cmd.options[:url]).to eq 'dbi:blah'
+        expect(cmd.options[:adapter]).to eq 'mysql'
+        expect(cmd.options[:host]).to eq 'test.host.com'
+        expect(cmd.options[:port]).to eq 3306
+        expect(cmd.options[:database]).to eq 'test'
         expect(cmd.options[:username]).to eq 'username'
         expect(cmd.options[:password]).to eq 'dev2'
       end
@@ -114,9 +126,9 @@ host: host
 secret: m0nitr$this
 EOF
         expect(File).to receive(:open).and_yield(config_file)
-        dbh = double()
-        expect(dbh).to receive(:select_one) { nil }
-        expect(DBI).to receive(:connect).and_yield(dbh)
+        client = double()
+        expect(client).to receive(:query) { {}}
+        expect(Mysql2::Client).to receive(:new) {client}
         expect {cmd.query_repository}.to raise_error
       end
     end
@@ -126,46 +138,54 @@ EOF
       it 'runs #print method on executor' do
         Aquarium::CommandLine.class_eval {def initialize ; end}
         cmd = Aquarium::CommandLine.new
-        cmd.options = {:file=>'file',:url=>'dbi:Mysql:blah'}
+        cmd.options = {:file=>'file',:adapter=>'mysql'}
         cmd.command = :apply_change
         cmd.parameters = ['test:1']
         file = StringIO.new "--#change test:1 Test change number 1\ncreate table test1\n;"
         allow(File).to receive(:dirname) {''}
         allow(File).to receive(:open).and_yield(file)
-        dbh = double()
-        allow(DBI).to receive(:connect) {dbh}
+        client = double()
+        expect(Mysql2::Client).to receive(:new) {client}
         class TestExecutor < Aquarium::Executor
           def initialize(database, parser,parameters,options)
           end
           def print
-            'print'
+            @@printed = true
+          end
+          def self.printed
+            @@printed
           end
         end
-        expect(Aquarium::Executor).to receive(:executor_for).with(cmd.command) {TestExecutor}
-        expect(cmd.run).to eq('print')
+        expect(Aquarium::Executor).to receive(:executor_for).with(cmd.command) {TestExecutor}        
+        cmd.run
+        expect(TestExecutor.printed).to be true
       end
     end
     context 'when -x options is specified' do
       it 'runs #execute method on executor' do
         Aquarium::CommandLine.class_eval {def initialize ; end}
         cmd = Aquarium::CommandLine.new
-        cmd.options = {:file=>'file',:url=>'dbi:Mysql:blah',:execute=>true,:callback => cmd}
+        cmd.options = {:file=>'file',:adapter=>'mysql',:execute=>true,:callback => cmd}
         cmd.command = :apply_change
         cmd.parameters = ['test:1']
         file = StringIO.new "--#change test:1 Test change number 1\ncreate table test1\n;"
         allow(File).to receive(:dirname) {''}
         allow(File).to receive(:open).and_yield(file)
-        dbh = double()
-        allow(DBI).to receive(:connect) {dbh}
+        client = double()
+        expect(Mysql2::Client).to receive(:new) {client}
         class TestExecutor < Aquarium::Executor
           def initialize(database, parser,parameters,options)
           end
           def execute
-            'execute'
+            @@executed = true
+          end
+          def self.executed
+            @@executed
           end
         end
-        expect(Aquarium::Executor).to receive(:executor_for).with(cmd.command) {TestExecutor}
-        expect(cmd.run).to eq('execute')
+        expect(Aquarium::Executor).to receive(:executor_for).with(cmd.command) {TestExecutor}        
+        cmd.run
+        expect(TestExecutor.executed).to be true
       end
       context 'when verbose option is used'
     end
@@ -173,14 +193,14 @@ EOF
       it 'print error to the stdout' do
         Aquarium::CommandLine.class_eval {def initialize ; end}
         cmd = Aquarium::CommandLine.new
-        cmd.options = {:file=>'file',:url=>'dbi:Mysql:blah',:execute=>true}
+        cmd.options = {:file=>'file',:adapter=>'mysql',:execute=>true}
         cmd.command = :apply_change
         cmd.parameters = ['test:1']
         file = StringIO.new "--#change test:1 Test change number 1\ncreate table test1\n;"
         allow(File).to receive(:dirname) {''}
         allow(File).to receive(:open).and_yield(file)
-        dbh = double()
-        allow(DBI).to receive(:connect) {dbh}
+        client = double()
+        expect(Mysql2::Client).to receive(:new) {client}
         class TestExecutor < Aquarium::Executor
           def initialize(database, parser,parameters,options)
           end

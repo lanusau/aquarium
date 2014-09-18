@@ -1,19 +1,26 @@
-require 'dbi'
+require 'mysql2'
 require 'aquarium/database'
 
 module Aquarium
   # MySQL database
   class MySQLDatabase < Aquarium::Database
+
+    attr :client
     
     register_database
 
-    def self.service(url) #:nodoc:
-      url =~ /^dbi:Mysql/ ? true : false
+    def self.service(adapter) #:nodoc:
+      adapter.downcase == 'mysql'
     end
 
     # Create new object
-    def initialize(options)     
-      @dbh = DBI.connect(options[:url], options[:username], options[:password])
+    def initialize(options)
+      @client = Mysql2::Client.new(
+        :host => options[:host],
+        :username => options[:username],
+        :password => options[:password],
+        :port => options[:port] || 3306,
+        :database => options[:database])
     end
 
     # Return SQL needed to create new control table
@@ -65,13 +72,57 @@ END
     # Return whether control table is missing
     def control_table_missing_sql
       sql = <<-END
-       select count(*) from information_schema.tables
+       select count(*) cnt from information_schema.tables
        where table_schema = database()
        and table_name = 'aqu_change'
       END
       return sql
     end
 
+    # Disconnect
+    def disconnect
+      @client.close
+    end
+
+    # Execute specified SQL
+    def execute(sql)
+      @client.query(sql)
+    end
+
+    # Commit
+    def commit
+      @client.query('commit')
+    end
+
+    # Return list of changes in database
+    def get_changes_in_database
+      @changes_in_database = []
+      @client.query('select code,file_name,description,change_id,cmr_number,user_update from aqu_change order by change_id asc',
+        :symbolize_keys => true) do | row |
+            @changes_in_database << Aquarium::Change.new(
+              row[:code],row[:file_name],row[:description],row[:change_id],row[:cmr_number],row[:user_update])
+      end
+      @changes_in_database
+    end
+
+    # Return whether control table is missing in the database
+    def control_table_missing?
+      return @control_table_missing unless @control_table_missing.nil?
+      row = @client.query(control_table_missing_sql,:symbolize_keys => true).first
+      @control_table_missing = (row[:cnt] == 0)
+      return @control_table_missing
+    end
+
+    # Check if particular SQL condition is met
+    def condition_met?(condition, expected_result)
+      begin
+        row = @client.query(condition,:as => :array).first
+      rescue Exception => e
+        raise "Error executing conditional SQL -> #{condition}\n#{e.to_s}"
+      end
+      result = (!row[0].nil? && row[0] > 0)
+      return result  == expected_result
+    end
 
   end
 end

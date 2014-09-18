@@ -296,7 +296,7 @@ describe Aquarium::Executor do
       change_collection = Aquarium::ChangeCollection.new('file_name')
       expect(parser).to receive(:parse) {change_collection}
       database = double()
-      expect(database).to receive(:execute) {raise DBI::DatabaseError.new 'error'}
+      expect(database).to receive(:execute) {raise Exception.new 'error'}
       executor = Aquarium::Executor.new(database,parser,[],{})
       expect {executor.execute_collection(sqls,1)}.to raise_error
     end

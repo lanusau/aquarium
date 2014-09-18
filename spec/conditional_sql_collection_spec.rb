@@ -25,10 +25,8 @@ describe '#to_a' do
       it 'returns list of SQLs' do
 
         # Fake database call to execute condition SQL
-        database = instance_double('Aquarium::Database')
-        dbh = instance_double('DBI::DatabaseHandle')
-        allow(dbh).to receive(:select_one) {[1]}
-        allow(database).to receive(:dbh) {dbh}
+        database = instance_double('Aquarium::MySQLDatabase')
+        expect(database).to receive(:condition_met?) {true}
 
         expect(@conditional_sql_collection.to_a(database)).to include(@sql)
       end
@@ -37,10 +35,8 @@ describe '#to_a' do
       it 'returns empty list' do
 
         # Fake database call to execute condition SQL
-        database = instance_double('Aquarium::Database')
-        dbh = instance_double('DBI::DatabaseHandle')
-        allow(dbh).to receive(:select_one) {[0]}
-        allow(database).to receive(:dbh) {dbh}
+        database = instance_double('Aquarium::MySQLDatabase')
+        expect(database).to receive(:condition_met?) {false}
 
         expect(@conditional_sql_collection.to_a(database)).not_to include(@sql)
       end
@@ -48,10 +44,8 @@ describe '#to_a' do
     context 'when invalid condition SQL is passed' do
       it 'raises error' do
         # Fake database call to execute condition SQL
-        database = instance_double('Aquarium::Database')
-        dbh = instance_double('DBI::DatabaseHandle')
-        allow(dbh).to receive(:select_one) {raise "Database error"}
-        allow(database).to receive(:dbh) {dbh}
+        database = instance_double('Aquarium::MySQLDatabase')
+        expect(database).to receive(:condition_met?) {raise "Database error"}
         expect {@conditional_sql_collection.to_a(database)}.to raise_error
       end
     end
