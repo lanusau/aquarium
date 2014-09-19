@@ -7,7 +7,6 @@ require 'colored'
 require 'aquarium/database'
 require 'aquarium/parser'
 require 'aquarium/executor'
-require 'byebug'
 
 module Aquarium
 
