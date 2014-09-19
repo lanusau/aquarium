@@ -98,7 +98,7 @@ END
     def get_changes_in_database
       @changes_in_database = []
       @client.query('select code,file_name,description,change_id,cmr_number,user_update from aqu_change order by change_id asc',
-        :symbolize_keys => true) do | row |
+        :symbolize_keys => true).each do | row |
             @changes_in_database << Aquarium::Change.new(
               row[:code],row[:file_name],row[:description],row[:change_id],row[:cmr_number],row[:user_update])
       end

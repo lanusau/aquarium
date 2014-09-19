@@ -112,7 +112,9 @@ describe Aquarium::MySQLDatabase do
           :code=>'test:1',:file_name=>'test_file.sql',
           :description=>'description',:change_id=>1,:cmr_number=>'123',
           :user_update=>'user_update'}
-      allow(client).to receive(:query).and_yield(row)
+      result = double()      
+      expect(client).to receive(:query) {result}
+      expect(result).to receive(:each).and_yield(row)
       changes = database.get_changes_in_database
       expect(changes.size).to eql(1)
       expect(changes[0]).to be_instance_of(Aquarium::Change)

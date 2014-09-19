@@ -44,8 +44,7 @@ module Aquarium
 
     # Return all changes in the database ordered by change_id
     def changes_in_database
-      return [] if control_table_missing?
-      
+      return [] if control_table_missing?      
       # Cache all changes on first call
       @changes_in_database ||= get_changes_in_database
 

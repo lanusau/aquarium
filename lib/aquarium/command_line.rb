@@ -21,7 +21,7 @@ module Aquarium
     # :nocov:
     def initialize(args)
       # Below is needed to shut up Oracle DBI driver
-      ENV['NLS_LANG']='AMERICAN_AMERICA.US7ASCII'
+      ENV['NLS_LANG']='AMERICAN_AMERICA.US7ASCII'      
       process_options(args)
       query_repository
     rescue Exception => e
@@ -43,13 +43,13 @@ module Aquarium
       assert_not_null(config,'host')
       assert_not_null(config,'secret')      
       client = Mysql2::Client.new(
-        :host => config[:host],
-        :username => config[:username],
-        :password => config[:password],
+        :host => config['host'],
+        :username => config['username'],
+        :password => config['password'],
         :port => config[:port] || 3306,
-        :database => config[:database])
+        :database => config['database'])
 
-      row = client.query("select adapter,host,port,database,username,salt,password from aqu_instance where name = '#{@options[:instance_name]}'",
+      row = client.query("select adapter,host,port,`database`,username,salt,password from aqu_instance where name = '#{@options[:instance_name]}'",
           :symbolize_keys => true).first
       raise "Did not find database instance \"#{@options[:instance_name]}\" in repository" if row.nil?
       @options[:adapter] = row[:adapter]
