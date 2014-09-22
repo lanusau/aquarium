@@ -20,16 +20,34 @@ module Aquarium
         raise "Change #{@change_code_to_rollback} not found" if @change.nil?
       end
 
+      # Print warning
+      # :nocov:
+      def warning(message)
+        puts ("** #{message}") if @options[:interactive]
+      end
+      # :nocov:
+
       # Actually execute SQLs
       def execute
-        raise "Change #{@change.code} is not registered in the database" unless @database.change_registered?(@change)
+        database_change = @database.change_registered?(@change)
+        raise "Change #{@change.code} is not registered in the database" unless database_change
+        if database_change.rollback_digest != @change.rollback_digest
+          warning "Warning ! Rollback SQLs in the file changed since the change was applied to the database"
+          warning "This may cause rollback to fail"
+        end
         rollback_change(@change)
         @database.unregister_change(@change)
       end
 
       # Only print SQLs
       def print
-        raise "Change #{@change.code} is not registered in the database" unless @database.change_registered?(@change)
+        database_change = @database.change_registered?(@change)
+        raise "Change #{@change.code} is not registered in the database" unless database_change
+        
+        if database_change.rollback_digest != @change.rollback_digest
+          warning "Warning ! Rollback SQLs in the file changed since the change was applied to the database"
+          warning "This may cause rollback to fail"
+        end
         
         @change.print_banner('ROLLBACK',@options)
 

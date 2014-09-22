@@ -111,7 +111,7 @@ describe Aquarium::MySQLDatabase do
       row = {
           :code=>'test:1',:file_name=>'test_file.sql',
           :description=>'description',:change_id=>1,:cmr_number=>'123',
-          :user_update=>'user_update'}
+          :user_update=>'user_update', :rollback_digest =>'123ABCD'}
       result = double()      
       expect(client).to receive(:query) {result}
       expect(result).to receive(:each).and_yield(row)
@@ -119,6 +119,7 @@ describe Aquarium::MySQLDatabase do
       expect(changes.size).to eql(1)
       expect(changes[0]).to be_instance_of(Aquarium::Change)
       expect(changes[0].code).to eql('test:1')
+      expect(changes[0].rollback_digest).to eql('123ABCD')
     end   
   end
 end

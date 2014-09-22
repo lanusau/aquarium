@@ -114,7 +114,7 @@ describe Aquarium::OracleDatabase do
       row = {
           "CODE"=>'test:1',"FILE_NAME"=>'test_file.sql',
           "DESCRIPTION"=>'description',"CHANGE_ID"=>1,"CMR_NUMBER"=>'123',
-          "USER_UPDATE"=>'user_update'}
+          "USER_UPDATE"=>'user_update',"ROLLBACK_DIGEST"=>'123ABCD'}
       cursor = double()
       expect(client).to receive(:exec) {cursor}
       expect(cursor).to receive(:fetch_hash) {row }
@@ -124,6 +124,7 @@ describe Aquarium::OracleDatabase do
       expect(changes.size).to eql(1)
       expect(changes[0]).to be_instance_of(Aquarium::Change)
       expect(changes[0].code).to eql('test:1')
+      expect(changes[0].rollback_digest).to eql('123ABCD')
     end
   end
   describe '#commit' do

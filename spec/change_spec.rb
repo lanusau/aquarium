@@ -1,4 +1,5 @@
 require 'helper'
+require 'digest'
 
 describe Aquarium::Change do
 
@@ -31,7 +32,36 @@ describe Aquarium::Change do
         expect(change.description).to eql(description)
         expect(change.id).to eql(id)
       end
-    end    
+    end
+    context 'with rollback_digest' do
+      it 'creates and instance of Change with rollback digest set' do
+        code = 'test:1'
+        file_name = 'test_file.sql'
+        description = 'test description'
+        id = 123
+        cmr_number = '123'
+        user_update = 'lanusau'
+        rollback_digest = '123ABCDEFG'
+        change = Aquarium::Change.new(code,file_name,description,id,cmr_number, user_update,rollback_digest)
+        expect(change.code).to eql(code)
+        expect(change.file_name).to eql(file_name)
+        expect(change.description).to eql(description)
+        expect(change.id).to eql(id)
+        expect(change.rollback_digest).to eql(rollback_digest)
+      end
+    end
+  end
+
+  describe '#rollback_digest' do
+    it 'calculates MD5 digest based on strings in rollback SQL collection' do
+      code = 'test:1'
+      file_name = 'test_file.sql'
+      description = 'test description'
+      change = Aquarium::Change.new(code,file_name,description)
+      change.rollback_sql_collection << 'SQL1'
+      change.rollback_sql_collection << 'SQL2'
+      expect(change.rollback_digest).to eq(Digest::MD5.hexdigest("SQL1;\nSQL2;"))
+    end
   end
   
   describe '#current_sql_collection' do

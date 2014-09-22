@@ -29,7 +29,7 @@ create table aqu_change (
   file_name varchar2(200) not null,
   description varchar2(1000) ,
   execution_date date not null,
-  tag varchar2(100) null,
+  rollback_digest varchar2(100) null,
   cmr_number varchar2(10) null,
   create_sysdate date not null,
   update_sysdate date not null,
@@ -56,11 +56,13 @@ insert into aqu_change
   (change_id,
    code,file_name,description,
    execution_date,cmr_number,
+   rollback_digest,
    create_sysdate,update_sysdate,user_update)
 values
   (aqu_primary_key_s.nextval,
    '#{change.code}','#{change.file_name}','#{change.description}',
    sysdate, '#{change.cmr_number}',
+   '#{change.rollback_digest}',
    sysdate,sysdate,'#{change.user_update}')
 END
     end
@@ -101,10 +103,12 @@ END
     # Return list of changes in database
     def get_changes_in_database
       @changes_in_database = []
-      cursor = @client.exec('select code,file_name,description,change_id,cmr_number,user_update from aqu_change order by change_id asc')
+      cursor = @client.exec('select code,file_name,description,change_id,cmr_number,user_update,rollback_digest
+        from aqu_change order by change_id asc')
       while row = cursor.fetch_hash
         @changes_in_database << Aquarium::Change.new(
-              row["CODE"],row["FILE_NAME"],row["DESCRIPTION"],row["CHANGE_ID"],row["CMR_NUMBER"],row["USER_UPDATE"])
+              row["CODE"],row["FILE_NAME"],row["DESCRIPTION"],row["CHANGE_ID"],
+              row["CMR_NUMBER"],row["USER_UPDATE"],row["ROLLBACK_DIGEST"])
       end
       cursor.close
       @changes_in_database

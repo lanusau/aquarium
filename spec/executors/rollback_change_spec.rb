@@ -52,36 +52,70 @@ describe Aquarium::Executors::RollbackChange do
         options = {:interactive => false}
         parameters = ['test:1']
         database = instance_double('Aquarium::MySQLDatabase')
-        expect(database).to receive(:change_registered?).with(@change1) {false}
+        expect(database).to receive(:change_registered?).with(@change1) {nil}
         expect(@parser).to receive(:parse) {@change_collection}
         executor = Aquarium::Executors::RollbackChange.new(database, @parser,parameters,options)
         expect {executor.execute}.to raise_error
       end
     end
-    context 'when change is registered in the database' do
+    context 'when change is registered in the database and rollback digests match' do
       it 'executes the change' do
         options = {:interactive => false}
         parameters = ['test:1']
         database = instance_double('Aquarium::MySQLDatabase')
-        expect(database).to receive(:change_registered?).with(@change1) {true}
+        database_change = Aquarium::Change.new('test:1','test_file.sql','description',1,'123','lanusau',@change1.rollback_digest)
+        expect(database).to receive(:change_registered?).with(@change1) {database_change}
         expect(@parser).to receive(:parse) {@change_collection}
         executor = Aquarium::Executors::RollbackChange.new(database, @parser,parameters,options)
         expect(executor).to receive(:rollback_change).with(@change1)
         expect(database).to receive(:unregister_change).with(@change1)
+        expect(executor).not_to receive(:warning)
+        executor.execute
+      end
+    end
+    context 'when change is registered in the database and rollback digests do not match' do
+      it 'outputs warning and executes the change' do
+        options = {:interactive => false}
+        parameters = ['test:1']
+        database = instance_double('Aquarium::MySQLDatabase')
+        database_change = Aquarium::Change.new('test:1','test_file.sql','description',1,'123','lanusau','123ABC')
+        expect(database).to receive(:change_registered?).with(@change1) {database_change}
+        expect(@parser).to receive(:parse) {@change_collection}
+        executor = Aquarium::Executors::RollbackChange.new(database, @parser,parameters,options)
+        expect(executor).to receive(:rollback_change).with(@change1)
+        expect(database).to receive(:unregister_change).with(@change1)
+        expect(executor).to receive(:warning).twice
         executor.execute
       end
     end
   end
   describe '#print' do
-    it 'prints DDL that would be executed' do
-      options = {:interactive => false}
-      parameters = ['test:1']
-      expect(OCI8).to receive(:new)
-      database = Aquarium::OracleDatabase.new(options)
-      expect(database).to receive(:change_registered?).with(@change1) {true}
-      expect(@parser).to receive(:parse) {@change_collection}
-      executor = Aquarium::Executors::RollbackChange.new(database, @parser,parameters,options)
-      expect {executor.print}.to output.to_stdout
+    context 'when rollback digests match' do
+      it 'prints DDL that would be executed' do
+        options = {:interactive => false}
+        parameters = ['test:1']
+        expect(OCI8).to receive(:new)
+        database = Aquarium::OracleDatabase.new(options)
+        database_change = Aquarium::Change.new('test:1','test_file.sql','description',1,'123','lanusau',@change1.rollback_digest)
+        expect(database).to receive(:change_registered?).with(@change1) {database_change}
+        expect(@parser).to receive(:parse) {@change_collection}
+        executor = Aquarium::Executors::RollbackChange.new(database, @parser,parameters,options)
+        expect {executor.print}.to output.to_stdout
+      end
+    end
+    context 'when rollback digest do not match' do
+      it 'It prints warning and prints DDL that would be executed' do
+        options = {:interactive => false}
+        parameters = ['test:1']
+        expect(OCI8).to receive(:new)
+        database = Aquarium::OracleDatabase.new(options)
+        database_change = Aquarium::Change.new('test:1','test_file.sql','description',1,'123','lanusau','123ABC')
+        expect(database).to receive(:change_registered?).with(@change1) {database_change}
+        expect(@parser).to receive(:parse) {@change_collection}
+        executor = Aquarium::Executors::RollbackChange.new(database, @parser,parameters,options)
+        expect(executor).to receive(:warning).twice
+        expect {executor.print}.to output.to_stdout
+      end
     end
   end
 end
