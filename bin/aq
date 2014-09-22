@@ -1,5 +1,8 @@
 #!/usr/bin/env ruby
 
+# Below is needed to shut up Oracle DBI driver
+ENV['NLS_LANG']='AMERICAN_AMERICA.US7ASCII' 
+
 require 'aquarium'
 
 Aquarium::CommandLine.new(ARGV).run

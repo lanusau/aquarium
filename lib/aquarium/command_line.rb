@@ -18,9 +18,7 @@ module Aquarium
 
     # Create new command line object
     # :nocov:
-    def initialize(args)
-      # Below is needed to shut up Oracle DBI driver
-      ENV['NLS_LANG']='AMERICAN_AMERICA.US7ASCII'      
+    def initialize(args)           
       process_options(args)
       query_repository
     rescue Exception => e
