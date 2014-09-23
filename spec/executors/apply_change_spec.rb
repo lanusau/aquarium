@@ -72,6 +72,22 @@ describe Aquarium::Executors::ApplyChange do
         executor.execute
       end
     end
+    context 'when user_update option is set' do
+      it 'executes the change and control table is correctly updated' do
+        options = {:interactive => false,:user_update=>'test'}
+        parameters = ['test:1']
+        database = instance_double('Aquarium::MySQLDatabase')
+        expect(database).to receive(:control_table_missing?) {false}
+        expect(database).to receive(:change_registered?).with(@change1) {false}
+        expect(@parser).to receive(:parse) {@change_collection}
+        executor = Aquarium::Executors::ApplyChange.new(database, @parser,parameters,options)
+        expect(executor).to receive(:apply_change).with(@change1)
+        expect(database).to receive(:register_change) do |change|
+          expect(change.user_update).to eq('test')
+        end
+        executor.execute
+      end
+    end
   end
   describe '#print' do
     it 'prints DDL that would be executed' do

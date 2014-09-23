@@ -17,7 +17,8 @@ module Aquarium
         raise 'Please specify change code to apply' if parameters.nil?
         @change_code_to_apply = parameters.shift
         @change = @change_collection.find(@change_code_to_apply)
-        raise "Change #{@change_code_to_apply} not found" if @change.nil?        
+        raise "Change #{@change_code_to_apply} not found" if @change.nil?
+        @change.user_update = options[:user_update] if options[:user_update]
       end
 
       # Actually execute SQL
