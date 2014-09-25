@@ -20,7 +20,8 @@ module Aquarium
         :username => options[:username],
         :password => options[:password],
         :port => options[:port] || 3306,
-        :database => options[:database])
+        :database => options[:database],
+        :secure_auth => false)
     end
 
     # Return SQL needed to create new control table
