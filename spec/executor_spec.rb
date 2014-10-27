@@ -165,6 +165,20 @@ describe Aquarium::Executor do
     end
   end
   describe '#rollback_change' do
+    context 'when change has rollback tag marged as impossible to rollback' do
+      it 'raises error' do
+        parser  = Aquarium::Parser.new('file_name')
+        change_collection = Aquarium::ChangeCollection.new('file_name')
+        change = Aquarium::Change.new('test:1','test_file.sql','description')
+        change.rollback_attribute = :impossible
+        change_collection.add_change(change)
+        expect(parser).to receive(:parse) {change_collection}
+        database = nil
+        parameters = nil
+        executor = Aquarium::Executor.new(database,parser,parameters,{})
+        expect {executor.rollback_change(change)}.to raise_error
+      end
+    end
     context 'when interactive is set in options' do
       options = {:interactive => true}
       context 'when no errors are raised during execution' do

@@ -50,6 +50,9 @@ module Aquarium
 
     # Rollback change
     def rollback_change(change)
+      if change.rollback_attribute == :impossible
+        raise 'Can not rollback change because rollback is marked as impossible'
+      end
       do_change_with_retry(:rollback,change)
     end
 

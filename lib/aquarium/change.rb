@@ -13,6 +13,7 @@ module Aquarium
     attr :cmr_number, true
     attr :user_update, true
     attr :rollback_digest
+    attr :rollback_attribute, true # :none, :long or :impossible
 
     # Create new change with specified code, file name and description
     def initialize(code,file_name,description,id=nil,cmr_number=nil,user_update=nil,rollback_digest=nil)
@@ -26,6 +27,7 @@ module Aquarium
       @cmr_number = cmr_number || ''
       @user_update = user_update || ENV['LOGNAME']
       @rollback_digest = rollback_digest
+      @rollback_attribute = :none
     end
 
     # Set current SQL collection to either :apply or :rollback
@@ -36,6 +38,15 @@ module Aquarium
     # Return digest of rollback SQLs
     def rollback_digest      
       @rollback_digest ||= Digest::MD5.hexdigest @rollback_sql_collection.to_string(nil)
+    end
+
+    def rollback_sql_collection
+      if @rollback_attribute == :impossible
+        sql_collection = Aquarium::SqlCollection.new
+        sql_collection << "--ROLLBACK NOT POSSIBLE"
+        return sql_collection
+      end
+      @rollback_sql_collection
     end
 
     # Return current SQL collection (either apply or rollback)

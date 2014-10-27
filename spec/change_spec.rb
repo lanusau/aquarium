@@ -63,6 +63,32 @@ describe Aquarium::Change do
       expect(change.rollback_digest).to eq(Digest::MD5.hexdigest("SQL1;\nSQL2;"))
     end
   end
+
+  describe '#rollback_sql_collection' do
+    context 'when rollback_attribute is not set or set to long' do
+      it 'returns actual rollback sql collection' do
+        code = 'test:1'
+        file_name = 'test_file.sql'
+        description = 'test description'
+        change = Aquarium::Change.new(code,file_name,description)
+        change.rollback_sql_collection << 'SQL1'
+        change.rollback_sql_collection << 'SQL2'
+        expect(change.rollback_sql_collection.sql_collection[0]).to eq 'SQL1'
+      end
+    end
+    context 'when rollback_attribute set to impossible' do
+      it 'returns sql collection with just a warning' do
+        code = 'test:1'
+        file_name = 'test_file.sql'
+        description = 'test description'
+        change = Aquarium::Change.new(code,file_name,description)
+        change.rollback_attribute = :impossible
+        change.rollback_sql_collection << 'SQL1'
+        change.rollback_sql_collection << 'SQL2'
+        expect(change.rollback_sql_collection.sql_collection[0]).not_to eq 'SQL1'
+      end
+    end
+  end
   
   describe '#current_sql_collection' do
     context 'when valid collection name is passed' do

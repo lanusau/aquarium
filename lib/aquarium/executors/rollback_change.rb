@@ -14,7 +14,7 @@ module Aquarium
       # Create new executor
       def initialize(database, parser,parameters,options)
         super
-        raise 'Please specify change code to apply' if parameters.nil?
+        raise 'Please specify change code to rollback' if parameters.nil?
         @change_code_to_rollback = parameters.shift
         @change = @change_collection.find(@change_code_to_rollback)
         raise "Change #{@change_code_to_rollback} not found" if @change.nil?
