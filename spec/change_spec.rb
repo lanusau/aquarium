@@ -50,6 +50,28 @@ describe Aquarium::Change do
         expect(change.rollback_digest).to eql(rollback_digest)
       end
     end
+    context 'with saved_rollback_text set' do
+      it 'creates and instance of Change with saved_rollback_text set' do
+        code = 'test:1'
+        file_name = 'test_file.sql'
+        description = 'test description'
+        id = 123
+        cmr_number = '123'
+        user_update = 'lanusau'
+        rollback_digest = '123ABCDEFG'
+        saved_rollback_sql_collection = Aquarium::SqlCollection.new
+        saved_rollback_sql_collection << 'SQL1'
+        saved_rollback_text = Base64.encode64(Marshal::dump(saved_rollback_sql_collection))
+        change = Aquarium::Change.new(code,file_name,description,id,cmr_number,
+          user_update,rollback_digest,saved_rollback_text)
+        expect(change.code).to eql(code)
+        expect(change.file_name).to eql(file_name)
+        expect(change.description).to eql(description)
+        expect(change.id).to eql(id)
+        expect(change.rollback_digest).to eql(rollback_digest)
+        expect(change.saved_rollback_sql_collection.sql_collection[0]).to eq 'SQL1'
+      end
+    end
   end
 
   describe '#rollback_digest' do

@@ -36,6 +36,7 @@ create table aqu_change (
   description varchar(1000) ,
   execution_date datetime not null,
   rollback_digest varchar(100) null,
+  encoded_rollback_text text,
   cmr_number varchar(10) null,
   create_sysdate datetime not null,
   update_sysdate datetime not null,
@@ -54,12 +55,12 @@ END
 insert into aqu_change
   (code,file_name,description,
    execution_date,cmr_number,
-   rollback_digest,
+   rollback_digest,encoded_rollback_text,
    create_sysdate,update_sysdate,user_update)
 values
   ('#{change.code}','#{change.file_name}','#{change.description}',
    now(),'#{change.cmr_number}',
-   '#{change.rollback_digest}',
+   '#{change.rollback_digest}','#{change.encoded_rollback_text}',
    now(),now(),'#{change.user_update}')
 END
     end
@@ -100,12 +101,13 @@ END
     # Return list of changes in database
     def get_changes_in_database
       @changes_in_database = []
-      @client.query('select code,file_name,description,change_id,cmr_number,user_update,rollback_digest
+      @client.query('select code,file_name,description,change_id,cmr_number,user_update,
+        rollback_digest,encoded_rollback_text
         from aqu_change order by change_id asc',
         :symbolize_keys => true).each do | row |
             @changes_in_database << Aquarium::Change.new(
               row[:code],row[:file_name],row[:description],row[:change_id],
-              row[:cmr_number],row[:user_update],row[:rollback_digest])
+              row[:cmr_number],row[:user_update],row[:rollback_digest],row[:encoded_rollback_text])
       end
       @changes_in_database
     end
