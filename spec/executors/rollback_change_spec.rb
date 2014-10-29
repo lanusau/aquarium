@@ -38,15 +38,15 @@ describe Aquarium::Executors::RollbackChange do
     end
     context 'with correct parameters' do
       it 'creates new object instance' do
-        database = nil
+        database = instance_double('Aquarium::MySQLDatabase')
+        database_change = Aquarium::Change.new('test:1','test_file.sql','description',1,'123','lanusau',@change1.rollback_digest)
+        expect(database).to receive(:change_registered?).with(@change1) {database_change}
         parameters = ["test:1"]
         options = {}
         expect(@parser).to receive(:parse) {@change_collection}
         expect(Aquarium::Executors::RollbackChange.new(database, @parser,parameters,options)).to be_instance_of(Aquarium::Executors::RollbackChange)
       end
     end
-  end
-  describe '#execute' do
     context 'when change is not registered in the database' do
       it 'raises an error' do
         options = {:interactive => false}
@@ -54,11 +54,27 @@ describe Aquarium::Executors::RollbackChange do
         database = instance_double('Aquarium::MySQLDatabase')
         expect(database).to receive(:change_registered?).with(@change1) {nil}
         expect(@parser).to receive(:parse) {@change_collection}
-        executor = Aquarium::Executors::RollbackChange.new(database, @parser,parameters,options)
-        expect {executor.execute}.to raise_error
+        expect {Aquarium::Executors::RollbackChange.new(database, @parser,parameters,options)}.to raise_error
       end
     end
-    context 'when change is registered in the database and rollback digests match' do
+    context 'when option :use_saved_rollback is passed' do
+      it 'creates new object instance and sets change rollback SQL collection to the one saved in db' do
+        database = instance_double('Aquarium::MySQLDatabase')
+        saved_rollback_sql_collection = Aquarium::SqlCollection.new
+        saved_rollback_sql_collection << 'SQL1'
+        saved_rollback_text = Base64.encode64(Marshal::dump(saved_rollback_sql_collection))
+        database_change = Aquarium::Change.new('test:1','test_file.sql','description',1,'123','lanusau',@change1.rollback_digest,saved_rollback_text)
+        expect(database).to receive(:change_registered?).with(@change1) {database_change}
+        parameters = ["test:1"]
+        options = {:use_saved_rollback => true}
+        expect(@parser).to receive(:parse) {@change_collection}
+        executor = Aquarium::Executors::RollbackChange.new(database, @parser,parameters,options)
+        expect(@change1.rollback_sql_collection.sql_collection).to match_array(saved_rollback_sql_collection.sql_collection)
+      end
+    end
+  end
+  describe '#execute' do    
+    context 'when rollback digests match' do
       it 'executes the change' do
         options = {:interactive => false}
         parameters = ['test:1']
@@ -73,7 +89,7 @@ describe Aquarium::Executors::RollbackChange do
         executor.execute
       end
     end
-    context 'when change is registered in the database and rollback digests do not match' do
+    context 'when rollback digests do not match' do
       it 'outputs warning and executes the change' do
         options = {:interactive => false}
         parameters = ['test:1']
@@ -84,7 +100,7 @@ describe Aquarium::Executors::RollbackChange do
         executor = Aquarium::Executors::RollbackChange.new(database, @parser,parameters,options)
         expect(executor).to receive(:rollback_change).with(@change1)
         expect(database).to receive(:unregister_change).with(@change1)
-        expect(executor).to receive(:warning).twice
+        expect(executor).to receive(:warning).exactly(3).times
         executor.execute
       end
     end
@@ -113,7 +129,7 @@ describe Aquarium::Executors::RollbackChange do
         expect(database).to receive(:change_registered?).with(@change1) {database_change}
         expect(@parser).to receive(:parse) {@change_collection}
         executor = Aquarium::Executors::RollbackChange.new(database, @parser,parameters,options)
-        expect(executor).to receive(:warning).twice
+        expect(executor).to receive(:warning).exactly(3).times
         expect {executor.print}.to output.to_stdout
       end
     end

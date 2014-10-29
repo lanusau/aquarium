@@ -12,6 +12,7 @@ describe Aquarium::CommandLine do
           '-c','config',
           '-x',
           '-v',
+          '-s',
           'apply_change','test:1'
         ]
         Aquarium::CommandLine.class_eval {def initialize ; end}
@@ -21,6 +22,7 @@ describe Aquarium::CommandLine do
         expect(cmd.options[:instance_name]).to eq 'database'
         expect(cmd.options[:config]).to eq 'config'
         expect(cmd.options[:execute]).to eq true
+        expect(cmd.options[:use_saved_rollback]).to eq true
         expect(cmd.options[:callback]).to eq cmd
         expect(cmd.command).to eq :apply_change
         expect(cmd.parameters[0]).to eq 'test:1'

@@ -111,6 +111,20 @@ describe Aquarium::Change do
       end
     end
   end
+
+  describe '#rollback_sql_collection=' do
+    it 'sets rollback sql collection to new sql collection and recalculates digest' do
+      code = 'test:1'
+      file_name = 'test_file.sql'
+      description = 'test description'
+      change = Aquarium::Change.new(code,file_name,description)
+      sql_collection = Aquarium::SqlCollection.new
+      sql_collection << 'SQL1'
+      sql_collection << 'SQL2'
+      change.rollback_sql_collection = sql_collection
+      expect(change.rollback_digest).to eq(Digest::MD5.hexdigest sql_collection.to_string(nil))
+    end
+  end
   
   describe '#current_sql_collection' do
     context 'when valid collection name is passed' do

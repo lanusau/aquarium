@@ -14,7 +14,6 @@ module Aquarium
     attr :saved_rollback_sql_collection
     attr :cmr_number, true
     attr :user_update, true
-    attr :rollback_digest
     attr :rollback_attribute, true # :none, :long or :impossible
 
     # Create new change with specified code, file name and description
@@ -56,6 +55,12 @@ module Aquarium
         return sql_collection
       end
       @rollback_sql_collection
+    end
+
+    # Set rollback SQL collection to a different SQL collection (from database)
+    def rollback_sql_collection=(sql_collection)
+      @rollback_sql_collection = sql_collection
+      @rollback_digest = Digest::MD5.hexdigest @rollback_sql_collection.to_string(nil)
     end
 
     # Return rollback SQL encoded to text suitable for saving into db

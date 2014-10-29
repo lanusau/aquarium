@@ -115,6 +115,9 @@ module Aquarium
         opts.on("-x", "--execute", "Execute SQL. Default is to just print SQL") do |config|
           @options[:execute] = true
         end
+        opts.on("-s", "--use-saved-rollback", "Use rollback SQLs saved in database instead of one from the file") do |config|
+          @options[:use_saved_rollback] = true
+        end
         opts.on("-v", "--verbose", "Verbose. Print every SQL executed") do |config|
           @options[:callback] = self
         end

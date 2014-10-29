@@ -14,10 +14,18 @@ module Aquarium
       # Create new executor
       def initialize(database, parser,parameters,options)
         super
+
         raise 'Please specify change code to rollback' if parameters.nil?
         @change_code_to_rollback = parameters.shift
         @change = @change_collection.find(@change_code_to_rollback)
         raise "Change #{@change_code_to_rollback} not found" if @change.nil?
+
+        @database_change = @database.change_registered?(@change)
+        raise "Change #{@change.code} is not registered in the database" unless @database_change
+        
+        if options[:use_saved_rollback]
+          @change.rollback_sql_collection = @database_change.saved_rollback_sql_collection
+        end
       end
 
       # Print warning
@@ -28,12 +36,11 @@ module Aquarium
       # :nocov:
 
       # Actually execute SQLs
-      def execute
-        database_change = @database.change_registered?(@change)
-        raise "Change #{@change.code} is not registered in the database" unless database_change
-        if database_change.rollback_digest != @change.rollback_digest
+      def execute        
+        if @database_change.rollback_digest != @change.rollback_digest
           warning "Warning ! Rollback SQLs in the file changed since the change was applied to the database"
           warning "This may cause rollback to fail"
+          warning "You can use -s option to use rollback SQLs that were stored in database when change was applied"
         end
         rollback_change(@change)
         @database.unregister_change(@change)
@@ -41,12 +48,10 @@ module Aquarium
 
       # Only print SQLs
       def print
-        database_change = @database.change_registered?(@change)
-        raise "Change #{@change.code} is not registered in the database" unless database_change
-        
-        if database_change.rollback_digest != @change.rollback_digest
+        if @database_change.rollback_digest != @change.rollback_digest
           warning "Warning ! Rollback SQLs in the file changed since the change was applied to the database"
           warning "This may cause rollback to fail"
+          warning "You can use -s option to use rollback SQLs that were stored in database when change was applied"
         end
         
         @change.print_banner('ROLLBACK',@options)
