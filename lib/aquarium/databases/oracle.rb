@@ -108,9 +108,11 @@ END
         rollback_digest,encoded_rollback_text
         from aqu_change order by change_id asc')
       while row = cursor.fetch_hash
+        # Read all text from CLOB if not null
+        clob_text = row['ENCODED_ROLLBACK_TEXT'].nil? ? nil : row['ENCODED_ROLLBACK_TEXT'].read
         @changes_in_database << Aquarium::Change.new(
               row["CODE"],row["FILE_NAME"],row["DESCRIPTION"],row["CHANGE_ID"],
-              row["CMR_NUMBER"],row["USER_UPDATE"],row["ROLLBACK_DIGEST"],row['ENCODED_ROLLBACK_TEXT'])
+              row["CMR_NUMBER"],row["USER_UPDATE"],row["ROLLBACK_DIGEST"],clob_text)
       end
       cursor.close
       @changes_in_database
