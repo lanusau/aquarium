@@ -129,12 +129,13 @@ END
     end
 
     # Check if particular SQL condition is met
-    def condition_met?(condition, expected_result)
+    def condition_met?(condition, expected_result)      
       begin
-        row = @client.exec(condition)
+        cursor = @client.exec(condition)
       rescue Exception => e
         raise "Error executing conditional SQL -> #{condition}\n#{e.to_s}"
       end
+      row = cursor.fetch
       result = (!row[0].nil? && row[0] > 0)
       return result  == expected_result
     end

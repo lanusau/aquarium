@@ -90,7 +90,9 @@ describe Aquarium::OracleDatabase do
         expect(OCI8).to receive(:new) {client}
         options = {:adapter => 'oracle'}
         database = Aquarium::Database.database_for(options)
-        expect(client).to receive(:exec) {[1]}
+        cursor = double()
+        expect(client).to receive(:exec) {cursor}
+        expect(cursor).to receive(:fetch) {[1]}
         expect(database.condition_met?("condition", true)).to eq(true)
       end
     end
