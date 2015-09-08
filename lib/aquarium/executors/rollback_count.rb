@@ -41,6 +41,7 @@ module Aquarium
         changes_to_rollback.each do |change|
           rollback_change(change)
           @database.unregister_change(change)
+          update_repository(:unregister,change)
         end
       end
 

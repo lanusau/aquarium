@@ -44,6 +44,7 @@ module Aquarium
         end
         rollback_change(@change)
         @database.unregister_change(@change)
+        update_repository(:unregister,@change)
       end
 
       # Only print SQLs

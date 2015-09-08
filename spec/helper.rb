@@ -5,6 +5,8 @@ SimpleCov.start do
   add_filter "spec/"
 end
 
+RSpec::Expectations.configuration.warn_about_potential_false_positives = false
+
 require_relative '../lib/aquarium/change'
 require_relative '../lib/aquarium/change_collection'
 require_relative '../lib/aquarium/conditional_sql_collection'

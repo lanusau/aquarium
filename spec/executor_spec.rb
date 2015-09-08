@@ -331,4 +331,57 @@ describe Aquarium::Executor do
       end
     end
   end
+  describe '#update_repository' do
+    context 'when :register parameter is passed' do
+      it 'registers change in repository' do
+        client = double()
+        options = Hash.new
+        options[:update_repository] = true
+        options[:client] = client
+        options[:instance_id] = 1
+        expect(client).to receive(:query).twice
+        database = double()
+        parser  = Aquarium::Parser.new('file_name')
+        change_collection = Aquarium::ChangeCollection.new('file_name')
+        expect(parser).to receive(:parse) {change_collection}
+        executor = Aquarium::Executor.new(database,parser,[],options)
+        change = Aquarium::Change.new('test:1','test_file.sql','description')
+        executor.update_repository(:register,change)
+      end
+    end
+    context 'when :unregister parameter is passed' do
+      it 'unregisters change in repository' do
+        client = double()
+        options = Hash.new
+        options[:update_repository] = true
+        options[:client] = client
+        options[:instance_id] = 1
+        expect(client).to receive(:query).twice
+        database = double()
+        parser  = Aquarium::Parser.new('file_name')
+        change_collection = Aquarium::ChangeCollection.new('file_name')
+        expect(parser).to receive(:parse) {change_collection}
+        executor = Aquarium::Executor.new(database,parser,[],options)
+        change = Aquarium::Change.new('test:1','test_file.sql','description')
+        executor.update_repository(:unregister,change)
+      end
+    end    
+    context 'when client exception is raised' do
+      it 'it re-raises exception' do
+        client = double()
+        options = Hash.new
+        options[:update_repository] = true
+        options[:client] = client
+        options[:instance_id] = 1
+        expect(client).to receive(:query)  {raise "Client error"}
+        database = double()
+        parser  = Aquarium::Parser.new('file_name')
+        change_collection = Aquarium::ChangeCollection.new('file_name')
+        expect(parser).to receive(:parse) {change_collection}
+        executor = Aquarium::Executor.new(database,parser,[],options)
+        change = Aquarium::Change.new('test:1','test_file.sql','description')      
+        expect {executor.update_repository(:register,change)}.to raise_error
+      end
+    end
+  end
 end

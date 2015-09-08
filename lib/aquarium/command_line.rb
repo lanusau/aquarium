@@ -46,16 +46,18 @@ module Aquarium
         :port => config[:port] || 3306,
         :database => config['database'])
 
-      row = client.query("select adapter,host,port,`database`,username,salt,password from aqu_instance where name = '#{@options[:instance_name]}'",
+      row = client.query("select instance_id,adapter,host,port,`database`,username,salt,password from aqu_instance where name = '#{@options[:instance_name]}'",
           :symbolize_keys => true).first
-      raise "Did not find database instance \"#{@options[:instance_name]}\" in repository" if row.nil?
+      raise "Did not find database instance \"#{@options[:instance_name]}\" in repository" if row.nil?      
       @options[:adapter] = row[:adapter]
       @options[:host] = row[:host]
       @options[:port] = row[:port]
       @options[:database] = row[:database]
       @options[:username] = row[:username]
       @options[:password] = decrypt(row[:salt],row[:password],config['secret'])
-      
+      @options[:update_repository] = true
+      @options[:client] = client
+      @options[:instance_id] = row[:instance_id]
     end
 
     # Decrypt password using salt and secret

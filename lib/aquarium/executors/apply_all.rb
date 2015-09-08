@@ -20,6 +20,7 @@ module Aquarium
 
           apply_change(change)
           @database.register_change(change)
+          update_repository(:register,change)
         end
       end
 

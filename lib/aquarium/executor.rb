@@ -53,8 +53,8 @@ module Aquarium
       if change.rollback_attribute == :impossible
         raise 'Can not rollback change because rollback is marked as impossible'
       end
-      do_change_with_retry(:rollback,change)
-    end
+      do_change_with_retry(:rollback,change)   
+    end    
 
     # Apply/rollback particular change, with re-try logic
     def do_change_with_retry(operation,change)
@@ -124,6 +124,23 @@ module Aquarium
 
       end
     end
+    
+    # Update Poseidon repository if requested (by command line client)
+    def update_repository(operation,change)
+      return if !@options[:update_repository]
+      client = @options[:client]
+      instance_id = @options[:instance_id]
+      case operation
+      when :register then 
+        client.query("insert ignore into aqu_instance_change (instance_id,change_code,create_sysdate,update_sysdate) 
+          values (#{instance_id},'#{change.code}',now(),now())")
+      when :unregister then
+        client.query("delete from aqu_instance_change where instance_id = #{instance_id} and change_code = '#{change.code}'")
+      end
+      client.query("COMMIT")
+    rescue Exception => e
+      raise "Updating Poseidon repository failed: " + e.to_s 
+    end    
 
     # Get response, retrying until its valid
     # :nocov:

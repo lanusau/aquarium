@@ -32,6 +32,7 @@ module Aquarium
         database_change = @database.change_registered?(@change)
         raise "Change #{@change.code} is not registered in the database" unless database_change
         @database.unregister_change(@change)
+        update_repository(:unregister,@change)
       end
 
       # Only print SQLs

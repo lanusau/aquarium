@@ -27,6 +27,7 @@ module Aquarium
 
         @database.create_control_table(@options) if @database.control_table_missing?
         @database.register_change(@change)
+        update_repository(:register,@change)
       end
 
       # Only print SQLs

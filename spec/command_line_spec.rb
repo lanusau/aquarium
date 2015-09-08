@@ -100,7 +100,8 @@ EOF
            :database => 'test',
            :username => 'username',
            :salt => '1025784991619346',
-           :password => 'Y9rEnBmdSsiC6XHAUz9csg=='
+           :password => 'Y9rEnBmdSsiC6XHAUz9csg==',
+           :instance_id => 1
           }]
         }
         expect(Mysql2::Client).to receive(:new) {client}        
@@ -111,6 +112,9 @@ EOF
         expect(cmd.options[:database]).to eq 'test'
         expect(cmd.options[:username]).to eq 'username'
         expect(cmd.options[:password]).to eq 'dev2'
+        expect(cmd.options[:update_repository]).to eq true
+        expect(cmd.options[:instance_id]).to eq 1
+        expect(cmd.options[:client]).to eq client     
       end
     end
     context 'with present config file, when instance is not found in repository' do
